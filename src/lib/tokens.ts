@@ -14,7 +14,7 @@ export const colors = {
   foreground: "#1A1A1A",
   muted: "#EBE5DE",
   mutedForeground: "#6C6863",
-  accent: "#D4AF37",
+  accent: "#C2A770",
   accentForeground: "#FFFFFF",
   border: "rgba(26, 26, 26, 0.15)",
 

@@ -19,6 +19,7 @@ import type {
   ExcelExportRequest,
   MaDetailRequest,
   MaDetailResponse,
+  MaterialGroupsResponse,
   SapExportRequest,
   UploadPlanResponse,
   UploadPriceResponse,
@@ -66,6 +67,124 @@ export class ApiClientError extends Error {
     this.status = status;
     this.detail = detail;
   }
+}
+
+// ----------------------------------------------------------------------------
+// Upload with progress — uses XMLHttpRequest because `fetch` doesn't expose
+// upload progress events in any cross-browser way.
+// ----------------------------------------------------------------------------
+
+export interface UploadProgressEvent {
+  loaded: number;   // bytes sent so far
+  total: number;    // total bytes (0 if unknown)
+  percent: number;  // 0-100 (0 if total unknown)
+}
+
+export interface UploadOptions {
+  /** 0-100 progress callback */
+  onProgress?: (event: UploadProgressEvent) => void;
+  /** Abort the upload if the signal fires. */
+  signal?: AbortSignal;
+}
+
+/**
+ * POST a single file to the given path and return the parsed JSON response.
+ *
+ * Emits `onProgress` while the browser streams the body. Honors `signal` for
+ * cancellation. Surfaces the backend's standard `{success, error, code}`
+ * error contract as an ApiClientError.
+ */
+export function uploadFileWithProgress<T>(
+  path: string,
+  file: File,
+  options: UploadOptions = {}
+): Promise<T> {
+  const { onProgress, signal } = options;
+  return new Promise<T>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Upload aborted", "AbortError"));
+      return;
+    }
+
+    const url = `${getApiBase()}${path}`;
+    const xhr = new XMLHttpRequest();
+    const form = new FormData();
+    form.append("file", file);
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (!onProgress) return;
+      const total = e.lengthComputable ? e.total : 0;
+      const percent = total > 0 ? (e.loaded / total) * 100 : 0;
+      onProgress({ loaded: e.loaded, total, percent });
+    });
+
+    xhr.addEventListener("load", () => {
+      let data: unknown;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        reject(
+          new ApiClientError(
+            `Upload: non-JSON response (HTTP ${xhr.status})`,
+            "INTERNAL_ERROR",
+            xhr.status
+          )
+        );
+        return;
+      }
+
+      if (isApiError(data)) {
+        reject(
+          new ApiClientError(
+            data.error,
+            data.code,
+            xhr.status,
+            data.detail
+          )
+        );
+        return;
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(
+          new ApiClientError(
+            `Upload failed with HTTP ${xhr.status}`,
+            "INTERNAL_ERROR",
+            xhr.status
+          )
+        );
+        return;
+      }
+
+      resolve(data as T);
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(
+        new ApiClientError(
+          "Network error during upload",
+          "INTERNAL_ERROR",
+          0
+        )
+      );
+    });
+
+    xhr.addEventListener("abort", () => {
+      reject(new DOMException("Upload aborted", "AbortError"));
+    });
+
+    if (signal) {
+      const onAbort = () => xhr.abort();
+      signal.addEventListener("abort", onAbort, { once: true });
+      // Make sure we clean up the listener once the request settles.
+      xhr.addEventListener("loadend", () =>
+        signal.removeEventListener("abort", onAbort)
+      );
+    }
+
+    xhr.open("POST", url);
+    xhr.send(form);
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -209,34 +328,24 @@ export const api = {
     return jsonRequest("/");
   },
 
-  /** Upload sales Excel. */
-  uploadSales(file: File): Promise<UploadSalesResponse> {
-    const form = new FormData();
-    form.append("file", file);
-    return jsonRequest("/api/upload/sales", {
-      method: "POST",
-      body: form,
-    });
+  /** Fetch material group categories for category-LT panel. */
+  materialGroups(): Promise<MaterialGroupsResponse> {
+    return jsonRequest("/api/material-groups");
+  },
+
+  /** Upload sales Excel. Emits progress events; supports abort via signal. */
+  uploadSales(file: File, options?: UploadOptions): Promise<UploadSalesResponse> {
+    return uploadFileWithProgress("/api/upload/sales", file, options);
   },
 
   /** Upload price Excel (optional). */
-  uploadPrice(file: File): Promise<UploadPriceResponse> {
-    const form = new FormData();
-    form.append("file", file);
-    return jsonRequest("/api/upload/price", {
-      method: "POST",
-      body: form,
-    });
+  uploadPrice(file: File, options?: UploadOptions): Promise<UploadPriceResponse> {
+    return uploadFileWithProgress("/api/upload/price", file, options);
   },
 
   /** Upload plan Excel (optional). */
-  uploadPlan(file: File): Promise<UploadPlanResponse> {
-    const form = new FormData();
-    form.append("file", file);
-    return jsonRequest("/api/upload/plan", {
-      method: "POST",
-      body: form,
-    });
+  uploadPlan(file: File, options?: UploadOptions): Promise<UploadPlanResponse> {
+    return uploadFileWithProgress("/api/upload/plan", file, options);
   },
 
   /** Run safety stock calculation. */

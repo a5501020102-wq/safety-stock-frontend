@@ -13,6 +13,7 @@
 // ============================================================================
 
 export type CalcMode = "all" | "total" | "compare" | "single";
+export type Granularity = "daily" | "weekly" | "monthly";
 export type AbcClass = "A" | "B" | "C";
 export type StockStatus = "red" | "green" | "blue" | "gray";
 export type ExportFormat = "xlsx" | "csv";
@@ -46,6 +47,7 @@ export interface SkuResult {
   outliersRemoved: number;
   price: number;
   enableMa: boolean;
+  isPriceMissing?: boolean;
   monthlyValues: number[];
 }
 
@@ -102,6 +104,8 @@ export interface ParametersSnapshot {
   enableOutlier: boolean;
   enableMa: boolean;
   maWindow: number | null;
+  granularity: Granularity;
+  engineVersion: string;
   salesFilename: string | null;
   priceFilename: string | null;
   planFilename: string | null;
@@ -153,6 +157,7 @@ export type UploadResponse =
 
 export interface CalculateRequestParams {
   calcMode: CalcMode;
+  granularity?: Granularity;
   selectedMonths?: number[];
   leadTime?: number;
   minMonths?: number;
@@ -162,6 +167,23 @@ export interface CalculateRequestParams {
   zScores?: { A: number; B: number; C: number };
   abcThresholds?: { A: number; B: number };
   targetSite?: string | null;
+  categoryLeadTimes?: Record<string, number>;
+  groupLeadTimes?: Record<string, number>;
+}
+
+export interface MaterialCategory {
+  name: string;
+  totalCount: number;
+  groups: Record<string, { name: string; count: number }>;
+}
+
+export interface MaterialGroupsResponse {
+  success: true;
+  available: boolean;
+  version: string | null;
+  totalSkus?: number;
+  totalCategories?: number;
+  categories: Record<string, MaterialCategory>;
 }
 
 export interface CalculateRequest {

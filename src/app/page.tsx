@@ -1,29 +1,34 @@
 import { VerticalLabel } from "@/components/layout/VerticalLabel";
+import { SectionHeader } from "@/components/layout/SectionHeader";
+import { WorkflowProvider } from "@/lib/workflow-context";
+import { UploadsSection } from "@/components/workflow/UploadsSection";
+import { ParametersForm } from "@/components/workflow/ParametersForm";
+import { CalculateBar } from "@/components/workflow/CalculateBar";
+import { ResultsSummary } from "@/components/workflow/ResultsSummary";
+import { ResultsTable } from "@/components/workflow/ResultsTable";
+import { AnalysisEmpty } from "@/components/workflow/AnalysisEmpty";
 
 /**
- * Day 2 verification page.
+ * Home page — Safety Stock Editorial v5.0
  *
- * This is an editorial "cover" demonstrating the design system tokens.
- * Day 3 will replace the body below with the real upload / calculate /
- * results flow. For now we only render the cover so we can visually
- * validate:
+ * Structure (single-page editorial):
+ *   Cover               — Masthead with hero
+ *   Section 01 · Sources        (Phase 2: Upload cards)
+ *   Section 02 · Configuration  (Phase 3: Parameters form)
+ *   Section 03 · Analysis       (Phase 4: Results + Export)
  *
- *  - Playfair Display + Inter fonts load
- *  - Warm Alabaster background and Charcoal foreground
- *  - Generous vertical spacing
- *  - Vertical gridlines visible on md+ (see background)
- *  - Paper noise texture (subtle)
- *  - Gold accent on hover
- *  - Zero radius everywhere
+ * Phase 1 renders the Cover + three section headers with placeholder
+ * bodies so we can verify the page structure before wiring in the real
+ * interactive content.
  */
 export default function Home() {
   return (
     <main className="relative">
-      {/* ============================================================
-          Cover / Masthead
-          ============================================================ */}
+      {/* ==========================================================
+          Cover · Masthead
+          ========================================================== */}
       <section className="relative min-h-[90vh] px-8 md:px-16 py-20 md:py-32">
-        {/* Overline: date + volume */}
+        {/* Overline */}
         <div className="flex items-center gap-6">
           <span className="h-px w-8 md:w-12 bg-foreground" />
           <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -61,85 +66,172 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Vertical side label — only visible on lg+ */}
+        {/* Vertical side label (lg+) */}
         <div className="absolute left-4 top-1/2 -translate-y-1/2">
           <VerticalLabel side="left">SS · Editorial / Vol. 05</VerticalLabel>
         </div>
+
+        {/* Right-side editorial apparatus (xl+) */}
+        <aside
+          aria-hidden="true"
+          className="absolute right-16 top-32 hidden xl:flex flex-col gap-16 w-52 select-none"
+        >
+          <div className="text-right">
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Printed
+            </span>
+            <span className="mt-3 block font-serif text-2xl italic leading-none text-foreground">
+              MMXXVI
+            </span>
+            <span className="mt-1 block font-sans text-xs tracking-[0.2em] text-muted-foreground">
+              APR · XV
+            </span>
+          </div>
+
+          <div className="text-right border-t border-foreground/20 pt-6">
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              In this issue
+            </span>
+            <ol className="mt-4 space-y-2 font-serif text-sm text-foreground">
+              <li>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
+                  I
+                </span>
+                Sources
+              </li>
+              <li>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
+                  II
+                </span>
+                Configuration
+              </li>
+              <li>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
+                  III
+                </span>
+                Analysis
+              </li>
+            </ol>
+          </div>
+
+          <div className="text-right border-t border-foreground/20 pt-6">
+            <p className="font-serif italic text-sm leading-relaxed text-muted-foreground">
+              &ldquo;The most valuable inventory is the one you didn&apos;t need
+              to carry.&rdquo;
+            </p>
+            <span className="mt-3 block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              — Editor&apos;s note
+            </span>
+          </div>
+        </aside>
       </section>
 
-      {/* ============================================================
-          Token sanity-check strip (removed in Day 3)
-          ============================================================ */}
-      <section className="border-t border-foreground/15 px-8 md:px-16 py-20">
-        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Design System · Sanity Check
-        </span>
+      {/* ==========================================================
+          Interactive tree — everything beyond the cover lives inside
+          a single WorkflowProvider so state flows across sections.
+          ========================================================== */}
+      <WorkflowProvider>
+        {/* Section 01 · Sources */}
+        <section
+          id="sources"
+          className="relative px-8 md:px-16 py-20 md:py-32"
+        >
+          <SectionHeader
+            numeral="01"
+            overline="Sources"
+            title="Materials,"
+            italicAccent="selected."
+            deck={
+              <>
+                Three inputs set the foundation for every analysis that follows.
+                Only the sales ledger is required; price and plan sheets refine
+                the interpretation.
+              </>
+            }
+            meta="Upload"
+          />
 
-        <h2 className="mt-6 font-serif text-3xl md:text-4xl leading-tight">
-          The <em className="text-accent">Details</em>.
-        </h2>
+          <UploadsSection />
+        </section>
 
-        {/* Color swatches */}
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Swatch label="Alabaster" hex="#F9F8F6" textOnLight />
-          <Swatch label="Charcoal" hex="#1A1A1A" />
-          <Swatch label="Gold" hex="#D4AF37" />
-          <Swatch label="Taupe" hex="#EBE5DE" textOnLight />
-        </div>
+        {/* Section 02 · Configuration */}
+        <section
+          id="configuration"
+          className="relative px-8 md:px-16 py-20 md:py-32"
+        >
+          <SectionHeader
+            numeral="02"
+            overline="Configuration"
+            title="The"
+            italicAccent="policy."
+            deck={
+              <>
+                Service level, lead time, ABC thresholds — the knobs that turn
+                raw demand into a considered reorder point.
+              </>
+            }
+            meta="Parameters"
+          />
 
-        {/* Type specimen */}
-        <div className="mt-16 grid md:grid-cols-2 gap-12">
+          <ParametersForm />
+
+          {/* The calculate trigger lives at the bottom of Configuration
+              because it reads from the params above. Its result renders
+              in Section 03 below. */}
+          <CalculateBar />
+        </section>
+
+        {/* Section 03 · Analysis */}
+        <section
+          id="analysis"
+          className="relative px-8 md:px-16 py-20 md:py-32"
+        >
+          <SectionHeader
+            numeral="03"
+            overline="Analysis"
+            title="The"
+            italicAccent="calculation."
+            deck={
+              <>
+                The results spread: summary statistics, per-SKU detail,
+                excluded items, and export to Excel or SAP MM17.
+              </>
+            }
+            meta="Results"
+          />
+
+          <AnalysisEmpty />
+          <ResultsSummary />
+          <ResultsTable />
+        </section>
+      </WorkflowProvider>
+
+      {/* ==========================================================
+          Colophon (footer)
+          ========================================================== */}
+      <footer className="border-t border-foreground/20 px-8 md:px-16 py-16">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Serif · Playfair Display
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Colophon
             </span>
-            <p className="mt-3 font-serif text-3xl leading-tight">
-              Elegance through
+            <p className="mt-4 font-serif italic text-lg text-foreground">
+              Set in Playfair Display &amp; Inter.
               <br />
-              <em>restraint.</em>
+              Printed on warm alabaster, bound in charcoal.
             </p>
           </div>
-          <div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Sans · Inter
+          <div className="text-left md:text-right">
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Engine
             </span>
-            <p className="mt-3 font-sans text-base leading-relaxed">
-              Body copy is set in Inter at 16px with generous line-height for
-              comfortable reading. 數字欄位則以 JetBrains Mono 呈現，確保表格
-              對齊精準。
-            </p>
+            <span className="mt-2 block font-mono text-xs text-foreground">
+              Python · Flask · Next.js 16
+            </span>
           </div>
         </div>
-      </section>
+      </footer>
     </main>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Local helper
-// ---------------------------------------------------------------------------
-
-function Swatch({
-  label,
-  hex,
-  textOnLight = false,
-}: {
-  label: string;
-  hex: string;
-  textOnLight?: boolean;
-}) {
-  return (
-    <div
-      className="aspect-[3/4] p-4 flex flex-col justify-between shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-shadow duration-700 hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-      style={{
-        backgroundColor: hex,
-        color: textOnLight ? "#1A1A1A" : "#F9F8F6",
-      }}
-    >
-      <span className="font-sans text-[10px] uppercase tracking-[0.3em]">
-        {label}
-      </span>
-      <span className="font-mono text-xs">{hex}</span>
-    </div>
-  );
-}
