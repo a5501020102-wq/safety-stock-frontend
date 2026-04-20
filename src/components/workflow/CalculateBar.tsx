@@ -31,7 +31,9 @@ export function CalculateBar() {
 
   const hasSales = Boolean(uploads.sales?.fileId);
   const hasSelectedMonths = (parameters.selectedMonths?.length ?? 0) > 0;
-  const canCalculate = hasSales && hasSelectedMonths && !isCalculating;
+  const hasDateRange = !!(parameters.dateFrom && parameters.dateTo);
+  const hasTimeFilter = hasSelectedMonths || hasDateRange;
+  const canCalculate = hasSales && hasTimeFilter && !isCalculating;
 
   // Keep a ref to the latest abort controller so we can cancel a stuck run.
   const abortRef = useRef<AbortController | null>(null);
@@ -93,8 +95,8 @@ export function CalculateBar() {
   // --------------------------------------------------------------------
   const reason = !hasSales
     ? "Upload the sales ledger to begin."
-    : !hasSelectedMonths
-    ? "Select at least one month."
+    : !hasTimeFilter
+    ? "Set a date range or select at least one month."
     : isCalculating
     ? "Crunching the numbers…"
     : calculationResult

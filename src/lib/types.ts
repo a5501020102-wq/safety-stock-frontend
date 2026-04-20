@@ -159,6 +159,8 @@ export interface CalculateRequestParams {
   calcMode: CalcMode;
   granularity?: Granularity;
   selectedMonths?: number[];
+  dateFrom?: string | null;
+  dateTo?: string | null;
   leadTime?: number;
   minMonths?: number;
   enableOutlier?: boolean;

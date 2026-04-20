@@ -67,6 +67,8 @@ const DEFAULT_PARAMETERS: CalculateRequestParams = {
   calcMode: "compare",
   granularity: "monthly",
   selectedMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  dateFrom: null,
+  dateTo: null,
   leadTime: 30,
   minMonths: 2,
   enableOutlier: true,
@@ -147,11 +149,11 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
   // Hydrate from localStorage on mount (client-only).
+  // calculationResult is NOT restored — user must re-calculate after refresh.
   useEffect(() => {
     const persisted = loadPersisted();
     if (persisted.uploads) setUploads(persisted.uploads);
     if (persisted.parameters) {
-      // Merge so new params introduced later still get defaults.
       setParametersState({ ...DEFAULT_PARAMETERS, ...persisted.parameters });
     }
   }, []);

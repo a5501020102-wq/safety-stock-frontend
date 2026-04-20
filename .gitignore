@@ -35,6 +35,12 @@ yarn-error.log*
 # but always commit the example file so new contributors know what to set
 !.env*.example
 
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # vercel
 .vercel
 

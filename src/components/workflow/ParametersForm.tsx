@@ -22,7 +22,7 @@ import type { CalcMode, Granularity, MaterialCategory } from "@/lib/types";
  *   - Generous spacing between groups; thin dividers
  */
 export function ParametersForm() {
-  const { parameters, setParameters } = useWorkflow();
+  const { parameters, setParameters, uploads } = useWorkflow();
 
   const set = setParameters;
 
@@ -110,6 +110,13 @@ export function ParametersForm() {
 
   const allMonths = () => set({ selectedMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] });
   const noMonths = () => set({ selectedMonths: [] });
+
+  // ----- Date range (from uploaded data) ------------------------------------
+  const dataDateRange = {
+    min: (uploads.sales as { dateRange?: { start?: string } } | null)?.dateRange?.start ?? "",
+    max: (uploads.sales as { dateRange?: { end?: string } } | null)?.dateRange?.end ?? "",
+  };
+  const [seasonalOpen, setSeasonalOpen] = useState(false);
 
   // ----- Category lead times (Advanced) ------------------------------------
   const [materialCategories, setMaterialCategories] = useState<
@@ -297,48 +304,86 @@ export function ParametersForm() {
       </div>
 
       {/* ============================================================
-          Right column · Months (5/12)
+          Right column · Date range + Seasonal filter (5/12)
           ============================================================ */}
-      <div className="lg:col-span-5">
+      <div className="lg:col-span-5 flex flex-col gap-12">
+        {/* --- Date range --- */}
         <Group
-          label="Selected months"
-          deck="Seasonal filter — only checked months feed the calculation."
+          label="Date range"
+          deck="Calculate using data from this period. Auto-filled from uploaded data."
         >
-          <div className="grid grid-cols-3 gap-y-3 gap-x-4">
-            {months.map(([num, name]) => (
-              <MonthCheckbox
-                key={num}
-                label={name}
-                num={num}
-                checked={isMonthSelected(num)}
-                onChange={() => toggleMonth(num)}
-              />
-            ))}
-          </div>
-
-          <div className="mt-8 flex items-center gap-4">
-            <button
-              type="button"
-              onClick={allMonths}
-              className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
-            >
-              Select all
-            </button>
-            <button
-              type="button"
-              onClick={noMonths}
-              className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
-            >
-              Clear
-            </button>
-            <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
-              {parameters.selectedMonths?.length ?? 0} / 12
+          <div className="flex flex-col gap-4">
+            <DateInput
+              label="From"
+              value={parameters.dateFrom ?? ""}
+              placeholder={dataDateRange.min}
+              onChange={(v) => set({ dateFrom: v || null })}
+            />
+            <DateInput
+              label="To"
+              value={parameters.dateTo ?? ""}
+              placeholder={dataDateRange.max}
+              onChange={(v) => set({ dateTo: v || null })}
+            />
+            <span className="font-sans text-[10px] text-muted-foreground/60">
+              Empty = use full range from uploaded data
             </span>
           </div>
         </Group>
 
-        {/* Status / preview of the configured policy */}
-        <div className="mt-12 border-t border-foreground/15 pt-6">
+        <Divider />
+
+        {/* --- Seasonal filter (collapsible) --- */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setSeasonalOpen((p) => !p)}
+            className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+          >
+            {seasonalOpen ? "▵ Collapse" : "▿ Advanced"} · Seasonal filter
+          </button>
+
+          {seasonalOpen ? (
+            <div className="mt-6">
+              <p className="font-serif italic text-xs text-muted-foreground max-w-md">
+                Exclude specific months across all years. Only checked months are included.
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-y-3 gap-x-4">
+                {months.map(([num, name]) => (
+                  <MonthCheckbox
+                    key={num}
+                    label={name}
+                    num={num}
+                    checked={isMonthSelected(num)}
+                    onChange={() => toggleMonth(num)}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={allMonths}
+                  className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+                >
+                  Select all
+                </button>
+                <button
+                  type="button"
+                  onClick={noMonths}
+                  className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+                >
+                  Clear
+                </button>
+                <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
+                  {parameters.selectedMonths?.length ?? 0} / 12
+                </span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Policy preview */}
+        <div className="border-t border-foreground/15 pt-6">
           <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Policy preview
           </span>
@@ -404,6 +449,52 @@ export function ParametersForm() {
 // ===========================================================================
 // Sub-primitives
 // ===========================================================================
+
+function DateInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (val: string) => void;
+}) {
+  const id = useId();
+  const displayPlaceholder = placeholder
+    ? placeholder.replace(/-/g, "/")
+    : "YYYY/MM/DD";
+
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        value={value}
+        placeholder={displayPlaceholder}
+        onChange={(e) => {
+          const raw = e.target.value;
+          onChange(raw);
+        }}
+        className={cn(
+          "mt-2 w-full bg-transparent border-0 border-b py-2",
+          "font-mono text-sm tabular-nums",
+          "focus:outline-none transition-colors duration-500 ease-luxury",
+          value
+            ? "border-foreground text-foreground focus:border-accent"
+            : "border-foreground/30 text-muted-foreground placeholder:italic focus:border-accent"
+        )}
+      />
+    </div>
+  );
+}
 
 function CategoryLtInput({
   catId,
@@ -766,6 +857,7 @@ function summarizePolicy(p: ReturnType<typeof useWorkflow>["parameters"]): strin
   const ma = p.enableMa ? `, MA(${p.maWindow ?? 3})` : "";
   const outlier = p.enableOutlier ? "" : ", outliers kept";
   const gran = p.granularity ?? "monthly";
+  const dateRange = p.dateFrom && p.dateTo ? ` · ${p.dateFrom}~${p.dateTo}` : "";
   const modeLabel =
     p.calcMode === "compare"
       ? "Compare"
@@ -777,6 +869,6 @@ function summarizePolicy(p: ReturnType<typeof useWorkflow>["parameters"]): strin
 
   return (
     `${modeLabel} · ${gran} · LT ${p.leadTime ?? 30}d · min ${p.minMonths ?? 2}m · ` +
-    `Z(${z.A}/${z.B}/${z.C}) · ${months}/12 months${ma}${outlier}.`
+    `Z(${z.A}/${z.B}/${z.C}) · ${months}/12 months${dateRange}${ma}${outlier}.`
   );
 }

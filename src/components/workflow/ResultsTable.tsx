@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
+import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { useWorkflow } from "@/lib/workflow-context";
 import type { CalculationResponse, SkuResult, StockStatus } from "@/lib/types";
@@ -31,6 +32,7 @@ export function ResultsTable() {
     const { allSummary, totalSummary } = calculationResult;
     return (
       <div className="mt-16 flex flex-col gap-20">
+        <ExportBar result={calculationResult} />
         <TableBlock
           heading="Split · Per site"
           italicAccent="spread"
@@ -51,6 +53,7 @@ export function ResultsTable() {
 
   return (
     <div className="mt-16">
+      <ExportBar result={calculationResult} />
       <TableBlock
         heading={calculationResult.mode === "total" ? "Consolidated" : "Per site"}
         italicAccent="results"
@@ -63,6 +66,182 @@ export function ResultsTable() {
 }
 
 // ---------------------------------------------------------------------------
+// Export bar (Excel / SAP)
+// ---------------------------------------------------------------------------
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function ExportBar({ result }: { result: CalculationResponse }) {
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const handleExportExcel = async () => {
+    setExporting("excel");
+    try {
+      let resp: { blob: Blob; filename: string };
+      const siteFilter = sapSite !== "all" ? sapSite : undefined;
+      if (result.mode === "compare") {
+        resp = await api.exportExcel({
+          mode: "compare",
+          siteFilter,
+          allSummary: { summary: result.allSummary.summary, results: result.allSummary.results },
+          totalSummary: { summary: result.totalSummary.summary, results: result.totalSummary.results },
+          comparison: result.comparison,
+        });
+      } else {
+        resp = await api.exportExcel({
+          mode: result.mode,
+          siteFilter,
+          summary: ("summary" in result) ? result.summary : undefined,
+          results: ("results" in result) ? result.results : undefined,
+        });
+      }
+      triggerDownload(resp.blob, resp.filename);
+    } catch (e) {
+      console.error("Export failed:", e);
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportSap = async (sapMode: "all" | "total") => {
+    setExporting("sap");
+    try {
+      let resp: { blob: Blob; filename: string };
+      const siteFilter = sapSite !== "all" ? sapSite : undefined;
+      if (result.mode === "compare") {
+        resp = await api.exportSap({
+          mode: "compare",
+          sapMode,
+          format: "xlsx",
+          siteFilter,
+          allSummary: { summary: result.allSummary.summary, results: result.allSummary.results },
+          totalSummary: { summary: result.totalSummary.summary, results: result.totalSummary.results },
+        });
+      } else {
+        resp = await api.exportSap({
+          mode: result.mode,
+          format: "xlsx",
+          siteFilter,
+          summary: ("summary" in result) ? result.summary : undefined,
+          results: ("results" in result) ? result.results : undefined,
+        });
+      }
+      triggerDownload(resp.blob, resp.filename);
+    } catch (e) {
+      console.error("SAP export failed:", e);
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  // Collect available sites from results
+  const availableSites = useMemo(() => {
+    const sites = new Set<string>();
+    if (result.mode === "compare") {
+      for (const r of result.allSummary.results) {
+        if (r.site) sites.add(r.site);
+      }
+    } else if ("results" in result) {
+      for (const r of result.results) {
+        if (r.site) sites.add(r.site);
+      }
+    }
+    return Array.from(sites).sort();
+  }, [result]);
+
+  const [sapSite, setSapSite] = useState<string>("all");
+
+  return (
+    <div className="border-t border-foreground/20 pt-6 flex flex-wrap items-center gap-6">
+      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+        Export
+      </span>
+
+      <button
+        type="button"
+        onClick={handleExportExcel}
+        disabled={exporting !== null}
+        className={cn(
+          "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+          exporting === "excel"
+            ? "text-accent border-accent"
+            : "text-foreground border-foreground hover:text-accent hover:border-accent"
+        )}
+      >
+        {exporting === "excel" ? "Downloading..." : "Excel"}
+      </button>
+
+      <div className="flex items-center gap-3">
+        <select
+          value={sapSite}
+          onChange={(e) => setSapSite(e.target.value)}
+          className="bg-transparent border-0 border-b border-foreground py-1 font-mono text-xs text-foreground appearance-none cursor-pointer focus:outline-none focus:border-accent transition-colors duration-500 ease-luxury pr-4"
+        >
+          <option value="all">All sites</option>
+          {availableSites.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
+      {result.mode === "compare" ? (
+        <>
+          <button
+            type="button"
+            onClick={() => handleExportSap("all")}
+            disabled={exporting !== null}
+            className={cn(
+              "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+              exporting === "sap"
+                ? "text-accent border-accent"
+                : "text-foreground border-foreground hover:text-accent hover:border-accent"
+            )}
+          >
+            SAP MM17 · Split
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExportSap("total")}
+            disabled={exporting !== null}
+            className={cn(
+              "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+              exporting === "sap"
+                ? "text-accent border-accent"
+                : "text-foreground border-foreground hover:text-accent hover:border-accent"
+            )}
+          >
+            SAP MM17 · Consolidated
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={() => handleExportSap(result.mode === "total" ? "total" : "all")}
+          disabled={exporting !== null}
+          className={cn(
+            "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+            exporting === "sap"
+              ? "text-accent border-accent"
+              : "text-foreground border-foreground hover:text-accent hover:border-accent"
+          )}
+        >
+          {exporting === "sap" ? "Downloading..." : "SAP MM17"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // TableBlock — one complete results table with its own local filter / sort
 // ---------------------------------------------------------------------------
 
@@ -70,6 +249,7 @@ type SortKey =
   | "site"
   | "sku"
   | "abcClass"
+  | "totalQty"
   | "meanDemand"
   | "stdDev"
   | "cv"
@@ -107,7 +287,7 @@ function TableBlock({
   const [siteFilter, setSiteFilter] = useState<string>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
-    key: "safetyStock",
+    key: "totalQty",
     dir: "desc",
   });
   const [page, setPage] = useState(1);
@@ -166,10 +346,39 @@ function TableBlock({
     return sorted;
   }, [results, siteFilter, statusFilter, query, sort, showSiteFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / pageSize));
+  // For split mode: group by SKU for display
+  const grouped = useMemo(() => {
+    if (mode !== "all") return null;
+    const map = new Map<string, SkuResult[]>();
+    for (const r of filteredSorted) {
+      const key = r.sku;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    }
+    // Sort groups by sum of totalQty desc
+    return Array.from(map.entries())
+      .map(([sku, items]) => ({
+        sku,
+        name: items[0].name,
+        abcClass: items[0].abcClass,
+        isPriceMissing: items[0].isPriceMissing,
+        totalQty: items.reduce((s, r) => s + r.totalQty, 0),
+        items: items.sort((a, b) => b.totalQty - a.totalQty),
+      }))
+      .sort((a, b) => b.totalQty - a.totalQty);
+  }, [filteredSorted, mode]);
+
+  // Pagination: count by groups (split) or rows (total/single)
+  const itemCount = grouped ? grouped.length : filteredSorted.length;
+  const totalPages = Math.max(1, Math.ceil(itemCount / pageSize));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * pageSize;
-  const pageSlice = filteredSorted.slice(start, start + pageSize);
+  const pageSlice = grouped
+    ? grouped.slice(start, start + pageSize)
+    : null;
+  const flatPageSlice = grouped
+    ? null
+    : filteredSorted.slice(start, start + pageSize);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -235,11 +444,14 @@ function TableBlock({
               <HeaderCell sortKey="abcClass" sort={sort} onSort={onSort} align="center">
                 ABC
               </HeaderCell>
+              <HeaderCell sortKey="totalQty" sort={sort} onSort={onSort} align="right">
+                Total
+              </HeaderCell>
               <HeaderCell sortKey="meanDemand" sort={sort} onSort={onSort} align="right">
                 Mean
               </HeaderCell>
               <HeaderCell sortKey="stdDev" sort={sort} onSort={onSort} align="right">
-                σ
+                Std Dev
               </HeaderCell>
               <HeaderCell sortKey="cv" sort={sort} onSort={onSort} align="right">
                 CV
@@ -256,20 +468,24 @@ function TableBlock({
             </tr>
           </thead>
           <tbody>
-            {pageSlice.length === 0 ? (
+            {itemCount === 0 ? (
               <tr>
                 <td
-                  colSpan={mode === "all" ? 10 : 9}
+                  colSpan={mode === "all" ? 11 : 10}
                   className="py-20 text-center font-serif italic text-muted-foreground border-t border-foreground/10"
                 >
                   No SKUs match the current filters.
                 </td>
               </tr>
-            ) : (
-              pageSlice.map((r) => (
+            ) : pageSlice ? (
+              pageSlice.map((group) => (
+                <SkuGroup key={group.sku} group={group} />
+              ))
+            ) : flatPageSlice ? (
+              flatPageSlice.map((r) => (
                 <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode={mode} />
               ))
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -280,12 +496,12 @@ function TableBlock({
           page={currentPage}
           totalPages={totalPages}
           onChange={setPage}
-          totalItems={filteredSorted.length}
+          totalItems={itemCount}
           pageSize={pageSize}
         />
       ) : (
         <div className="mt-4 font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          {filteredSorted.length} rows
+          {grouped ? `${itemCount} SKUs · ${filteredSorted.length} rows` : `${filteredSorted.length} rows`}
         </div>
       )}
     </section>
@@ -296,15 +512,71 @@ function TableBlock({
 // Table row
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// SKU Group (for split/all mode)
+// ---------------------------------------------------------------------------
+
+interface SkuGroupData {
+  sku: string;
+  name: string;
+  abcClass: "A" | "B" | "C";
+  isPriceMissing?: boolean;
+  totalQty: number;
+  items: SkuResult[];
+}
+
+function SkuGroup({ group }: { group: SkuGroupData }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <>
+      {/* Group header */}
+      <tr
+        onClick={() => setCollapsed((p) => !p)}
+        className="border-t-2 border-foreground/20 bg-[#f4f1ec] cursor-pointer select-none hover:bg-[#ede8e0] transition-colors duration-300"
+      >
+        <td className="py-3 px-3">
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {collapsed ? "▸" : "▾"} {group.items.length} sites
+          </span>
+        </td>
+        <td className="py-3 px-3">
+          <span className="font-mono text-xs font-medium text-foreground">{group.sku}</span>
+        </td>
+        <td className="py-3 px-3">
+          <span className="font-sans text-sm text-foreground line-clamp-1 max-w-xs block">
+            {group.name || "—"}
+          </span>
+        </td>
+        <td className="py-3 px-3 text-center">
+          <AbcBadge cls={group.abcClass} priceMissing={group.isPriceMissing} />
+        </td>
+        <td className="py-3 px-3 text-right">
+          <span className="font-mono text-sm font-medium tabular-nums text-foreground">
+            {formatNumber(group.totalQty, 0)}
+          </span>
+        </td>
+        <td colSpan={6} className="py-3 px-3" />
+      </tr>
+      {/* Site rows within group */}
+      {!collapsed && group.items.map((r) => (
+        <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode="all" indent />
+      ))}
+    </>
+  );
+}
+
 function ExpandableResultRow({
   row,
   mode,
+  indent,
 }: {
   row: SkuResult;
   mode: "all" | "total" | "single";
+  indent?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const colCount = mode === "all" ? 10 : 9;
+  const colCount = mode === "all" ? 11 : 10;
 
   return (
     <>
@@ -312,27 +584,29 @@ function ExpandableResultRow({
         onClick={() => setExpanded((p) => !p)}
         className={cn(
           "border-t border-foreground/10 hover:bg-[#F3EEE7] transition-colors duration-300 cursor-pointer select-none",
-          expanded && "bg-[#F3EEE7]"
+          expanded && "bg-[#F3EEE7]",
+          indent && "bg-[#faf8f5]"
         )}
       >
         {mode === "all" ? (
           <Cell>
-            <span className="font-mono text-xs text-muted-foreground">
+            <span className={cn("font-mono text-xs", indent ? "pl-4 text-foreground" : "text-muted-foreground")}>
               {row.site}
             </span>
           </Cell>
         ) : null}
         <Cell>
-          <span className="font-mono text-xs text-foreground">{row.sku}</span>
+          <span className="font-mono text-xs text-foreground">{indent ? "" : row.sku}</span>
         </Cell>
         <Cell>
           <span className="font-sans text-sm text-foreground/80 line-clamp-1 max-w-xs block">
-            {row.name || "—"}
+            {indent ? "" : (row.name || "—")}
           </span>
         </Cell>
         <Cell align="center">
-          <AbcBadge cls={row.abcClass} priceMissing={row.isPriceMissing} />
+          {indent ? null : <AbcBadge cls={row.abcClass} priceMissing={row.isPriceMissing} />}
         </Cell>
+        <NumericCell value={row.totalQty} decimals={0} />
         <NumericCell value={row.meanDemand} decimals={0} />
         <NumericCell value={row.stdDev} decimals={0} />
         <NumericCell value={row.cv} decimals={2} />
@@ -346,7 +620,7 @@ function ExpandableResultRow({
             colSpan={colCount}
             className="border-l-2 border-l-[color:var(--color-accent)] bg-[#F3EEE7]/50 px-6 py-5"
           >
-            <DemandHeatmap values={row.monthlyValues} safetyStock={row.safetyStock} mean={row.meanDemand} />
+            <DemandDetail row={row} />
           </td>
         </tr>
       ) : null}
@@ -358,15 +632,12 @@ function ExpandableResultRow({
 // Demand heatmap (expandable row content)
 // ---------------------------------------------------------------------------
 
-function DemandHeatmap({
-  values,
-  safetyStock,
-  mean,
+function DemandDetail({
+  row,
 }: {
-  values: number[];
-  safetyStock: number;
-  mean: number;
+  row: SkuResult;
 }) {
+  const values = row.monthlyValues;
   if (!values || values.length === 0) {
     return (
       <span className="font-serif italic text-sm text-muted-foreground">
@@ -375,61 +646,69 @@ function DemandHeatmap({
     );
   }
 
+  const mean = row.meanDemand;
+  const ss = row.safetyStock;
   const maxVal = Math.max(...values, 1);
 
   return (
-    <div>
-      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Period demand
-      </span>
-
-      <div className="mt-3 flex flex-wrap gap-1">
-        {values.map((v, i) => {
-          const tone = demandTone(v, mean, safetyStock);
-          const height = Math.max(4, Math.round((v / maxVal) * 32));
-          return (
-            <div
-              key={i}
-              className="flex flex-col items-center gap-1"
-              title={`Period ${i + 1}: ${formatNumber(v, 0)}`}
-            >
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
+      {/* Left: demand bar chart */}
+      <div>
+        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          Demand by period
+        </span>
+        <div className="mt-3 flex items-end gap-[2px] h-16">
+          {values.map((v, i) => {
+            const h = Math.max(2, Math.round((v / maxVal) * 56));
+            const bg =
+              v <= 0 ? "bg-[color:var(--color-shortage)]/20"
+              : v >= mean ? "bg-[color:var(--color-healthy)]/30"
+              : "bg-[color:var(--color-accent)]/30";
+            return (
               <div
-                className={cn("w-5 transition-all duration-300", tone)}
-                style={{ height: `${height}px` }}
+                key={i}
+                className={cn("flex-1 min-w-[6px] max-w-[28px]", bg)}
+                style={{ height: `${h}px` }}
+                title={`P${i + 1}: ${formatNumber(v, 0)}`}
               />
-              <span className="font-mono text-[9px] text-muted-foreground/60 tabular-nums">
-                {v > 0 ? formatNumber(v, 0) : "—"}
-              </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <div className="mt-1 flex gap-[2px]">
+          {values.map((v, i) => (
+            <span key={i} className="flex-1 min-w-[6px] max-w-[28px] text-center font-mono text-[8px] text-muted-foreground/50 tabular-nums truncate">
+              {v > 0 ? formatNumber(v, 0) : "0"}
+            </span>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-6 font-sans text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-[rgba(58,90,64,0.20)]" />
-          Above mean
+      {/* Right: summary stats */}
+      <div className="flex flex-col gap-3 min-w-[180px]">
+        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          Summary
         </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-[rgba(194,167,112,0.20)]" />
-          Below mean
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 bg-[rgba(139,38,53,0.15)]" />
-          Zero demand
-        </span>
-        <span className="ml-auto font-mono tabular-nums">
-          {values.length} periods · SS: {formatNumber(safetyStock, 0)}
-        </span>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
+          <span className="text-muted-foreground">Mean</span>
+          <span className="text-right tabular-nums">{formatNumber(mean, 0)}</span>
+          <span className="text-muted-foreground">Std Dev</span>
+          <span className="text-right tabular-nums">{formatNumber(row.stdDev, 0)}</span>
+          <span className="text-muted-foreground">CV</span>
+          <span className="text-right tabular-nums">{formatNumber(row.cv, 2)}</span>
+          <span className="text-muted-foreground">Safety Stock</span>
+          <span className="text-right tabular-nums font-medium">{formatNumber(ss, 0)}</span>
+          <span className="text-muted-foreground">ROP</span>
+          <span className="text-right tabular-nums">{formatNumber(row.reorderPoint, 0)}</span>
+          <span className="text-muted-foreground">Max</span>
+          <span className="text-right tabular-nums">{formatNumber(row.maxInventory, 0)}</span>
+          <span className="text-muted-foreground">Periods</span>
+          <span className="text-right tabular-nums">{values.length}</span>
+          <span className="text-muted-foreground">Active</span>
+          <span className="text-right tabular-nums">{values.filter(v => v > 0).length}</span>
+        </div>
       </div>
     </div>
   );
-}
-
-function demandTone(value: number, mean: number, _ss: number): string {
-  if (value <= 0) return "bg-[rgba(139,38,53,0.15)]";
-  if (value >= mean) return "bg-[rgba(58,90,64,0.20)]";
-  return "bg-[rgba(194,167,112,0.20)]";
 }
 
 // ---------------------------------------------------------------------------
@@ -529,9 +808,7 @@ function NumericCell({
 
 function AbcBadge({ cls, priceMissing }: { cls: "A" | "B" | "C"; priceMissing?: boolean }) {
   const bg =
-    priceMissing
-      ? "border border-dashed border-foreground/30 text-muted-foreground bg-transparent"
-      : cls === "A"
+    cls === "A"
       ? "bg-[color:var(--color-abc-a)] text-background"
       : cls === "B"
       ? "bg-[color:var(--color-abc-b)] text-background"
@@ -541,11 +818,12 @@ function AbcBadge({ cls, priceMissing }: { cls: "A" | "B" | "C"; priceMissing?: 
       className={cn(
         "inline-flex items-center justify-center w-6 h-6",
         "font-mono text-[10px] font-medium",
-        bg
+        bg,
+        priceMissing && "border border-dashed border-foreground/40"
       )}
-      title={priceMissing ? "Price data missing — defaulted to class C" : undefined}
+      title={priceMissing ? "Classified by quantity (no price data)" : undefined}
     >
-      {priceMissing ? "C*" : cls}
+      {cls}
     </span>
   );
 }
