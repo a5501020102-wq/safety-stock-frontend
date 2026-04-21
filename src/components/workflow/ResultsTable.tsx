@@ -254,11 +254,13 @@ type SortKey =
   | "abcClass"
   | "totalQty"
   | "meanDemand"
+  | "dailyDemand"
   | "stdDev"
   | "cv"
   | "safetyStock"
   | "reorderPoint"
-  | "maxInventory";
+  | "maxInventory"
+  | "trendPct";
 type SortDir = "asc" | "desc";
 
 const STATUS_FILTERS: Array<{
@@ -285,6 +287,7 @@ function TableBlock({
   results: SkuResult[];
   mode: "all" | "total" | "single";
 }) {
+  const { parameters } = useWorkflow();
   // Filter state
   const [statusFilter, setStatusFilter] = useState<"all" | StockStatus>("all");
   const [siteFilter, setSiteFilter] = useState<string>("all");
@@ -336,9 +339,22 @@ function TableBlock({
       );
     }
     // Sort (immutable: clone before sorting)
+    const gran = parameters?.granularity ?? "monthly";
+    const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters?.workingDaysPerMonth ?? 30);
+
+    const getSortValue = (r: SkuResult, key: SortKey): number | string | null => {
+      if (key === "dailyDemand") return r.meanDemand > 0 ? r.meanDemand / dpp : 0;
+      if (key === "trendPct") return r.trendPct ?? null;
+      return r[key] as number | string;
+    };
+
     const sorted = [...list].sort((a, b) => {
-      const av = a[sort.key];
-      const bv = b[sort.key];
+      const av = getSortValue(a, sort.key);
+      const bv = getSortValue(b, sort.key);
+      // Nulls go last
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
       if (av === bv) return 0;
       const dir = sort.dir === "asc" ? 1 : -1;
       if (typeof av === "number" && typeof bv === "number") {
@@ -347,7 +363,7 @@ function TableBlock({
       return String(av).localeCompare(String(bv)) * dir;
     });
     return sorted;
-  }, [results, siteFilter, statusFilter, query, sort, showSiteFilter]);
+  }, [results, siteFilter, statusFilter, query, sort, showSiteFilter, parameters]);
 
   // For split mode: group by SKU for display
   const grouped = useMemo(() => {
@@ -453,6 +469,9 @@ function TableBlock({
               <HeaderCell sortKey="meanDemand" sort={sort} onSort={onSort} align="right">
                 Mean
               </HeaderCell>
+              <HeaderCell sortKey="dailyDemand" sort={sort} onSort={onSort} align="right">
+                Daily
+              </HeaderCell>
               <HeaderCell sortKey="stdDev" sort={sort} onSort={onSort} align="right">
                 Std Dev
               </HeaderCell>
@@ -468,13 +487,16 @@ function TableBlock({
               <HeaderCell sortKey="maxInventory" sort={sort} onSort={onSort} align="right">
                 Max
               </HeaderCell>
+              <HeaderCell sortKey="trendPct" sort={sort} onSort={onSort} align="right">
+                Trend
+              </HeaderCell>
             </tr>
           </thead>
           <tbody>
             {itemCount === 0 ? (
               <tr>
                 <td
-                  colSpan={mode === "all" ? 11 : 10}
+                  colSpan={mode === "all" ? 13 : 12}
                   className="py-20 text-center font-serif italic text-muted-foreground border-t border-foreground/10"
                 >
                   No SKUs match the current filters.
@@ -559,7 +581,7 @@ function SkuGroup({ group }: { group: SkuGroupData }) {
             {formatNumber(group.totalQty, 0)}
           </span>
         </td>
-        <td colSpan={6} className="py-3 px-3" />
+        <td colSpan={8} className="py-3 px-3" />
       </tr>
       {/* Site rows within group */}
       {!collapsed && group.items.map((r) => (
@@ -578,8 +600,13 @@ function ExpandableResultRow({
   mode: "all" | "total" | "single";
   indent?: boolean;
 }) {
+  const { parameters } = useWorkflow();
   const [expanded, setExpanded] = useState(false);
-  const colCount = mode === "all" ? 11 : 10;
+  const colCount = mode === "all" ? 13 : 12;
+
+  const gran = parameters.granularity ?? "monthly";
+  const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters.workingDaysPerMonth ?? 30);
+  const dailyDemand = row.meanDemand > 0 ? row.meanDemand / dpp : 0;
 
   return (
     <>
@@ -611,11 +638,13 @@ function ExpandableResultRow({
         </Cell>
         <NumericCell value={row.totalQty} decimals={0} />
         <NumericCell value={row.meanDemand} decimals={0} />
+        <NumericCell value={dailyDemand} decimals={0} />
         <NumericCell value={row.stdDev} decimals={0} />
         <NumericCell value={row.cv} decimals={2} />
         <NumericCell value={row.safetyStock} decimals={0} bold statusTone={row.status} />
         <NumericCell value={row.reorderPoint} decimals={0} />
         <NumericCell value={row.maxInventory} decimals={0} />
+        <TrendCell label={row.trendLabel} pct={row.trendPct} />
       </tr>
       {expanded ? (
         <tr>
@@ -804,6 +833,17 @@ function NumericCell({
         )}
       >
         {formatNumber(value, decimals)}
+      </span>
+    </td>
+  );
+}
+
+function TrendCell({ label, pct }: { label?: string; pct?: number | null }) {
+  const display = label ?? "—";
+  return (
+    <td className="py-3 px-3 text-right">
+      <span className="font-mono text-sm tabular-nums text-foreground">
+        {display}
       </span>
     </td>
   );

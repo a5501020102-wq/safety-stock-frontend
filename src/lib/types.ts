@@ -48,6 +48,8 @@ export interface SkuResult {
   price: number;
   enableMa: boolean;
   isPriceMissing?: boolean;
+  trendPct?: number | null;
+  trendLabel?: string;
   monthlyValues: number[];
 }
 
@@ -171,6 +173,8 @@ export interface CalculateRequestParams {
   targetSite?: string | null;
   categoryLeadTimes?: Record<string, number>;
   groupLeadTimes?: Record<string, number>;
+  trendMode?: "short" | "yoy" | "none";
+  workingDaysPerMonth?: number | null;
 }
 
 export interface MaterialCategory {

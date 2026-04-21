@@ -233,7 +233,7 @@ export function ParametersForm() {
           label="Time"
           deck="Days from order to delivery; minimum months of data required to compute."
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <UnderlineNumber
               label="Lead time"
               suffix="days"
@@ -250,6 +250,16 @@ export function ParametersForm() {
               max={12}
               onChange={(v) => set({ minMonths: v })}
             />
+            {parameters.granularity === "monthly" ? (
+              <UnderlineNumber
+                label="Working days / month"
+                suffix="days"
+                value={parameters.workingDaysPerMonth ?? 30}
+                min={1}
+                max={31}
+                onChange={(v) => set({ workingDaysPerMonth: v === 30 ? null : v })}
+              />
+            ) : null}
           </div>
         </Group>
 
@@ -299,6 +309,32 @@ export function ParametersForm() {
                 </div>
               </div>
             ) : null}
+          </div>
+        </Group>
+
+        <Divider />
+
+        {/* --- Trend detection --- */}
+        <Group
+          label="Trend"
+          deck="Show demand trend percentage in results."
+        >
+          <div className="flex flex-col">
+            {([
+              { value: "none", label: "None", deck: "Do not calculate trend." },
+              { value: "short", label: "Short-term", deck: "Compare first half vs second half of the data range." },
+              { value: "yoy", label: "YoY", deck: "Compare same months across the latest two years." },
+            ] as const).map((opt) => (
+              <RadioRow
+                key={opt.value}
+                name="trendMode"
+                value={opt.value}
+                checked={(parameters.trendMode ?? "none") === opt.value}
+                onChange={() => set({ trendMode: opt.value })}
+                label={opt.label}
+                deck={opt.deck}
+              />
+            ))}
           </div>
         </Group>
       </div>

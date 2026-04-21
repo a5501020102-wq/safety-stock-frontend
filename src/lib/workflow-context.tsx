@@ -77,6 +77,8 @@ const DEFAULT_PARAMETERS: CalculateRequestParams = {
   zScores: { A: 2.05, B: 1.65, C: 1.28 },
   abcThresholds: { A: 0.8, B: 0.95 },
   targetSite: null,
+  trendMode: "none",
+  workingDaysPerMonth: null,
 };
 
 const INITIAL_STATE: WorkflowState = {
