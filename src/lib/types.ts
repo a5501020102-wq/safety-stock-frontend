@@ -232,6 +232,7 @@ export type CalculationResponse = SingleModeResponse | CompareModeResponse;
 export interface ExcelExportRequest {
   mode: CalcMode;
   siteFilter?: string | null;
+  granularity?: Granularity;
   summary?: CalculationSummary;
   results?: SkuResult[];
   comparison?: ComparisonStats;

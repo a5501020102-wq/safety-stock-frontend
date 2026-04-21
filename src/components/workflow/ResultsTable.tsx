@@ -81,6 +81,7 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 function ExportBar({ result }: { result: CalculationResponse }) {
+  const granularity = result.parameters?.granularity ?? "monthly";
   const [exporting, setExporting] = useState<string | null>(null);
 
   const handleExportExcel = async () => {
@@ -92,6 +93,7 @@ function ExportBar({ result }: { result: CalculationResponse }) {
         resp = await api.exportExcel({
           mode: "compare",
           siteFilter,
+          granularity,
           allSummary: { summary: result.allSummary.summary, results: result.allSummary.results },
           totalSummary: { summary: result.totalSummary.summary, results: result.totalSummary.results },
           comparison: result.comparison,
@@ -100,6 +102,7 @@ function ExportBar({ result }: { result: CalculationResponse }) {
         resp = await api.exportExcel({
           mode: result.mode,
           siteFilter,
+          granularity,
           summary: ("summary" in result) ? result.summary : undefined,
           results: ("results" in result) ? result.results : undefined,
         });
