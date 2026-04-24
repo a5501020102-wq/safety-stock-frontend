@@ -148,10 +148,7 @@ export interface UploadPlanResponse extends UploadBase {
   hasCumulativeColumns: boolean;
 }
 
-export type UploadResponse =
-  | UploadSalesResponse
-  | UploadPriceResponse
-  | UploadPlanResponse;
+export type UploadResponse = UploadSalesResponse | UploadPriceResponse | UploadPlanResponse;
 
 // ============================================================================
 // Calculation responses

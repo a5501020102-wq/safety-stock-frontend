@@ -16,16 +16,9 @@ export function VerticalGridlines() {
   const positions = ["16.666%", "33.333%", "66.666%", "83.333%"];
 
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[55] hidden md:block"
-    >
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[55] hidden md:block">
       {positions.map((left) => (
-        <div
-          key={left}
-          className="absolute top-0 h-full w-px bg-foreground/10"
-          style={{ left }}
-        />
+        <div key={left} className="absolute top-0 h-full w-px bg-foreground/10" style={{ left }} />
       ))}
     </div>
   );

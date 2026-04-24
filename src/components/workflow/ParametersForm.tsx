@@ -98,8 +98,7 @@ export function ParametersForm() {
     [12, "Dec"],
   ] as const;
 
-  const isMonthSelected = (m: number) =>
-    parameters.selectedMonths?.includes(m) ?? false;
+  const isMonthSelected = (m: number) => parameters.selectedMonths?.includes(m) ?? false;
 
   const toggleMonth = (m: number) => {
     const cur = new Set(parameters.selectedMonths ?? []);
@@ -119,22 +118,25 @@ export function ParametersForm() {
   const [seasonalOpen, setSeasonalOpen] = useState(false);
 
   // ----- Category lead times (Advanced) ------------------------------------
-  const [materialCategories, setMaterialCategories] = useState<
-    Record<string, MaterialCategory>
-  >({});
+  const [materialCategories, setMaterialCategories] = useState<Record<string, MaterialCategory>>({});
   const [masterAvailable, setMasterAvailable] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    api.materialGroups().then((res) => {
-      if (cancelled) return;
-      if (res.available) {
-        setMaterialCategories(res.categories);
-        setMasterAvailable(true);
-      }
-    }).catch(() => {});
-    return () => { cancelled = true; };
+    api
+      .materialGroups()
+      .then((res) => {
+        if (cancelled) return;
+        if (res.available) {
+          setMaterialCategories(res.categories);
+          setMasterAvailable(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const setCategoryLt = (catId: string, value: number | null) => {
@@ -156,10 +158,7 @@ export function ParametersForm() {
           ============================================================ */}
       <div className="lg:col-span-7 flex flex-col gap-12">
         {/* --- Calc mode --- */}
-        <Group
-          label="Calculation mode"
-          deck="Three lenses on the same data."
-        >
+        <Group label="Calculation mode" deck="Three lenses on the same data.">
           <div className="flex flex-col">
             {calcModes.map((m) => (
               <RadioRow
@@ -178,10 +177,7 @@ export function ParametersForm() {
         <Divider />
 
         {/* --- Aggregation granularity --- */}
-        <Group
-          label="Aggregation"
-          deck="Time-period granularity for demand analysis."
-        >
+        <Group label="Aggregation" deck="Time-period granularity for demand analysis.">
           <div className="flex flex-col">
             {granularityOptions.map((g) => (
               <RadioRow
@@ -200,10 +196,7 @@ export function ParametersForm() {
         <Divider />
 
         {/* --- ABC service levels --- */}
-        <Group
-          label="Service level (ABC)"
-          deck="Differentiated Z-scores by ABC tier. Higher = more cushion."
-        >
+        <Group label="Service level (ABC)" deck="Differentiated Z-scores by ABC tier. Higher = more cushion.">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6">
             {(["A", "B", "C"] as const).map((tier) => (
               <UnderlineSelect
@@ -229,10 +222,7 @@ export function ParametersForm() {
         <Divider />
 
         {/* --- Numeric inputs --- */}
-        <Group
-          label="Time"
-          deck="Days from order to delivery; minimum months of data required to compute."
-        >
+        <Group label="Time" deck="Days from order to delivery; minimum months of data required to compute.">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <UnderlineNumber
               label="Lead time"
@@ -266,10 +256,7 @@ export function ParametersForm() {
         <Divider />
 
         {/* --- Toggles --- */}
-        <Group
-          label="Refinements"
-          deck="Statistical filters applied before computing safety stock."
-        >
+        <Group label="Refinements" deck="Statistical filters applied before computing safety stock.">
           <div className="flex flex-col gap-6">
             <ToggleRow
               label="MAD outlier detection"
@@ -315,16 +302,15 @@ export function ParametersForm() {
         <Divider />
 
         {/* --- Trend detection --- */}
-        <Group
-          label="Trend"
-          deck="Show demand trend percentage in results."
-        >
+        <Group label="Trend" deck="Show demand trend percentage in results.">
           <div className="flex flex-col">
-            {([
-              { value: "none", label: "None", deck: "Do not calculate trend." },
-              { value: "short", label: "Short-term", deck: "Compare first half vs second half of the data range." },
-              { value: "yoy", label: "YoY", deck: "Compare same months across the latest two years." },
-            ] as const).map((opt) => (
+            {(
+              [
+                { value: "none", label: "None", deck: "Do not calculate trend." },
+                { value: "short", label: "Short-term", deck: "Compare first half vs second half of the data range." },
+                { value: "yoy", label: "YoY", deck: "Compare same months across the latest two years." },
+              ] as const
+            ).map((opt) => (
               <RadioRow
                 key={opt.value}
                 name="trendMode"
@@ -344,10 +330,7 @@ export function ParametersForm() {
           ============================================================ */}
       <div className="lg:col-span-5 flex flex-col gap-12">
         {/* --- Date range --- */}
-        <Group
-          label="Date range"
-          deck="Calculate using data from this period. Auto-filled from uploaded data."
-        >
+        <Group label="Date range" deck="Calculate using data from this period. Auto-filled from uploaded data.">
           <div className="flex flex-col gap-4">
             <DateInput
               label="From"
@@ -445,8 +428,8 @@ export function ParametersForm() {
           {advancedOpen ? (
             <div className="mt-8">
               <p className="font-serif italic text-sm text-muted-foreground max-w-xl">
-                Override the global lead time for specific product categories.
-                Empty fields inherit the global value above.
+                Override the global lead time for specific product categories. Empty fields inherit the global value
+                above.
               </p>
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
@@ -498,16 +481,11 @@ function DateInput({
   onChange: (val: string) => void;
 }) {
   const id = useId();
-  const displayPlaceholder = placeholder
-    ? placeholder.replace(/-/g, "/")
-    : "YYYY/MM/DD";
+  const displayPlaceholder = placeholder ? placeholder.replace(/-/g, "/") : "YYYY/MM/DD";
 
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
-      >
+      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         {label}
       </label>
       <input
@@ -552,10 +530,7 @@ function CategoryLtInput({
 
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
-      >
+      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         {name}
       </label>
       <span className="block mt-1 font-mono text-[10px] text-muted-foreground/60">
@@ -589,34 +564,18 @@ function CategoryLtInput({
         />
         <span className="font-sans text-xs text-muted-foreground">days</span>
         {!hasOverride ? (
-          <span className="font-serif italic text-xs text-muted-foreground/40">
-            default: {defaultLt}
-          </span>
+          <span className="font-serif italic text-xs text-muted-foreground/40">default: {defaultLt}</span>
         ) : null}
       </div>
     </div>
   );
 }
 
-function Group({
-  label,
-  deck,
-  children,
-}: {
-  label: string;
-  deck?: string;
-  children: React.ReactNode;
-}) {
+function Group({ label, deck, children }: { label: string; deck?: string; children: React.ReactNode }) {
   return (
     <div>
-      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        {label}
-      </span>
-      {deck ? (
-        <p className="mt-2 font-serif italic text-sm text-muted-foreground max-w-md">
-          {deck}
-        </p>
-      ) : null}
+      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
+      {deck ? <p className="mt-2 font-serif italic text-sm text-muted-foreground max-w-md">{deck}</p> : null}
       <div className="mt-6">{children}</div>
     </div>
   );
@@ -651,15 +610,7 @@ function RadioRow({
         checked && "border-foreground/40"
       )}
     >
-      <input
-        id={id}
-        type="radio"
-        name={name}
-        value={value}
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
+      <input id={id} type="radio" name={name} value={value} checked={checked} onChange={onChange} className="sr-only" />
       {/* Custom marker — square that fills with foreground when checked */}
       <span
         aria-hidden="true"
@@ -677,11 +628,7 @@ function RadioRow({
         >
           {label}
         </span>
-        {deck ? (
-          <p className="mt-1 font-sans text-sm text-muted-foreground">
-            {deck}
-          </p>
-        ) : null}
+        {deck ? <p className="mt-1 font-sans text-sm text-muted-foreground">{deck}</p> : null}
       </div>
     </label>
   );
@@ -701,10 +648,7 @@ function UnderlineSelect({
   const id = useId();
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
-      >
+      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Tier <span className="text-foreground">{tier}</span>
       </label>
       <select
@@ -745,10 +689,7 @@ function UnderlineNumber({
   const id = useId();
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
-      >
+      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         {label}
       </label>
       <div className="mt-2 flex items-baseline gap-3 border-b border-foreground py-2 transition-colors duration-500 ease-luxury focus-within:border-accent">
@@ -765,16 +706,9 @@ function UnderlineNumber({
             if (max !== undefined && next > max) return;
             onChange(next);
           }}
-          className={cn(
-            "w-24 bg-transparent border-0 outline-none",
-            "font-mono text-2xl tabular-nums text-foreground"
-          )}
+          className={cn("w-24 bg-transparent border-0 outline-none", "font-mono text-2xl tabular-nums text-foreground")}
         />
-        {suffix ? (
-          <span className="font-serif italic text-sm text-muted-foreground">
-            {suffix}
-          </span>
-        ) : null}
+        {suffix ? <span className="font-serif italic text-sm text-muted-foreground">{suffix}</span> : null}
       </div>
     </div>
   );
@@ -795,15 +729,10 @@ function ToggleRow({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex-1">
-        <label
-          htmlFor={id}
-          className="font-serif text-lg leading-tight text-foreground cursor-pointer"
-        >
+        <label htmlFor={id} className="font-serif text-lg leading-tight text-foreground cursor-pointer">
           {label}
         </label>
-        {deck ? (
-          <p className="mt-1 font-sans text-sm text-muted-foreground">{deck}</p>
-        ) : null}
+        {deck ? <p className="mt-1 font-sans text-sm text-muted-foreground">{deck}</p> : null}
       </div>
 
       {/* Switch */}
@@ -815,18 +744,14 @@ function ToggleRow({
         onClick={() => onChange(!checked)}
         className={cn(
           "relative inline-flex h-6 w-12 items-center border transition-colors duration-500 ease-luxury shrink-0 mt-1",
-          checked
-            ? "bg-foreground border-foreground"
-            : "bg-transparent border-foreground/40"
+          checked ? "bg-foreground border-foreground" : "bg-transparent border-foreground/40"
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
             "inline-block h-4 w-4 transition-transform duration-500 ease-luxury",
-            checked
-              ? "translate-x-7 bg-accent"
-              : "translate-x-1 bg-foreground/40"
+            checked ? "translate-x-7 bg-accent" : "translate-x-1 bg-foreground/40"
           )}
         />
       </button>
@@ -863,13 +788,7 @@ function MonthCheckbox({
             "bg-transparent border-foreground/10 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
       )}
     >
-      <input
-        id={id}
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
+      <input id={id} type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
       <span
         className={cn(
           "font-mono text-[10px] tracking-[0.2em] transition-colors duration-500 ease-luxury",
@@ -898,10 +817,10 @@ function summarizePolicy(p: ReturnType<typeof useWorkflow>["parameters"]): strin
     p.calcMode === "compare"
       ? "Compare"
       : p.calcMode === "all"
-      ? "Split"
-      : p.calcMode === "total"
-      ? "Consolidated"
-      : "Compare";
+        ? "Split"
+        : p.calcMode === "total"
+          ? "Consolidated"
+          : "Compare";
 
   return (
     `${modeLabel} · ${gran} · LT ${p.leadTime ?? 30}d · min ${p.minMonths ?? 2}m · ` +

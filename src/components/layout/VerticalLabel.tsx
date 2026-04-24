@@ -21,11 +21,7 @@ interface VerticalLabelProps {
  *
  * Hidden on small screens to avoid overlap.
  */
-export function VerticalLabel({
-  children,
-  side = "left",
-  className,
-}: VerticalLabelProps) {
+export function VerticalLabel({ children, side = "left", className }: VerticalLabelProps) {
   return (
     <span
       aria-hidden="true"

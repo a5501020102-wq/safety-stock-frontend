@@ -96,12 +96,12 @@ export function CalculateBar() {
   const reason = !hasSales
     ? "Upload the sales ledger to begin."
     : !hasTimeFilter
-    ? "Set a date range or select at least one month."
-    : isCalculating
-    ? "Crunching the numbers…"
-    : calculationResult
-    ? "Results are ready below. Recalculate to iterate."
-    : "All set. Press Calculate.";
+      ? "Set a date range or select at least one month."
+      : isCalculating
+        ? "Crunching the numbers…"
+        : calculationResult
+          ? "Results are ready below. Recalculate to iterate."
+          : "All set. Press Calculate.";
 
   return (
     <div className="mt-20 md:mt-24 border-t border-foreground/25 pt-10">

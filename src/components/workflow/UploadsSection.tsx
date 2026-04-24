@@ -19,9 +19,7 @@ import { useWorkflow } from "@/lib/workflow-context";
 export function UploadsSection() {
   const { uploads } = useWorkflow();
 
-  const loadedCount = [uploads.sales, uploads.price, uploads.plan].filter(
-    Boolean
-  ).length;
+  const loadedCount = [uploads.sales, uploads.price, uploads.plan].filter(Boolean).length;
 
   const ready = Boolean(uploads.sales);
 
@@ -82,17 +80,12 @@ export function UploadsSection() {
       {/* Status strip */}
       <div className="mt-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-t border-foreground/15 pt-6">
         <div>
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Status
-          </span>
+          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Status</span>
           <p className="mt-2 font-serif italic text-lg leading-tight text-foreground">
             {ready ? (
               <>
                 {loadedCount} of 3 sources linked. Ready for{" "}
-                <em className="not-italic font-serif text-accent">
-                  Configuration
-                </em>
-                .
+                <em className="not-italic font-serif text-accent">Configuration</em>.
               </>
             ) : (
               <>Awaiting the sales ledger.</>

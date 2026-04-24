@@ -2,12 +2,7 @@
 
 import { useWorkflow } from "@/lib/workflow-context";
 import { formatNumber } from "@/lib/format";
-import type {
-  CalculationResponse,
-  CalculationSummary,
-  ComparisonStats,
-  ParametersSnapshot,
-} from "@/lib/types";
+import type { CalculationResponse, CalculationSummary, ComparisonStats, ParametersSnapshot } from "@/lib/types";
 
 /**
  * ResultsSummary
@@ -39,10 +34,7 @@ function ParametersRow({ parameters: p }: { parameters: ParametersSnapshot }) {
   const entries: Array<[string, React.ReactNode]> = [
     ["Mode", capitalizeMode(p.calcMode)],
     ["Granularity", capitalize(p.granularity ?? "monthly")],
-    [
-      "Range",
-      p.dataMinDate && p.dataMaxDate ? `${p.dataMinDate} → ${p.dataMaxDate}` : "—",
-    ],
+    ["Range", p.dataMinDate && p.dataMaxDate ? `${p.dataMinDate} → ${p.dataMaxDate}` : "—"],
     ["Excluded", p.excludedMonth ?? "—"],
     ["Lead time", `${p.leadTimeDays} days`],
     ["Min periods", String(p.minMonths)],
@@ -61,12 +53,8 @@ function ParametersRow({ parameters: p }: { parameters: ParametersSnapshot }) {
       <dl className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-4">
         {entries.map(([label, val]) => (
           <div key={label}>
-            <dt className="font-sans text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">
-              {label}
-            </dt>
-            <dd className="mt-1 font-mono text-sm text-foreground tabular-nums">
-              {val}
-            </dd>
+            <dt className="font-sans text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">{label}</dt>
+            <dd className="mt-1 font-mono text-sm text-foreground tabular-nums">{val}</dd>
           </div>
         ))}
       </dl>
@@ -104,15 +92,9 @@ function StatCard({ label, value, hint, accent = false }: CardSpec) {
         accent ? "border-l-[3px] border-l-accent" : ""
       }`}
     >
-      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        {label}
-      </span>
-      <p className="mt-3 font-serif text-4xl md:text-5xl leading-none tabular-nums text-foreground">
-        {value}
-      </p>
-      <p className="mt-3 font-sans text-xs leading-relaxed text-muted-foreground">
-        {hint}
-      </p>
+      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
+      <p className="mt-3 font-serif text-4xl md:text-5xl leading-none tabular-nums text-foreground">{value}</p>
+      <p className="mt-3 font-sans text-xs leading-relaxed text-muted-foreground">{hint}</p>
     </article>
   );
 }

@@ -6,10 +6,7 @@
  * - formatBytes: human-readable file sizes (B / KB / MB / GB)
  */
 
-export function formatNumber(
-  value: number | null | undefined,
-  decimals = 0
-): string {
+export function formatNumber(value: number | null | undefined, decimals = 0): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   return value.toLocaleString("en-US", {
     minimumFractionDigits: decimals,
@@ -17,10 +14,7 @@ export function formatNumber(
   });
 }
 
-export function formatPercent(
-  value: number | null | undefined,
-  decimals = 1
-): string {
+export function formatPercent(value: number | null | undefined, decimals = 1): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   return `${value.toFixed(decimals)}%`;
 }

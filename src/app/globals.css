@@ -10,11 +10,11 @@
 
 @theme {
   /* ---------- Color: Warm Alabaster base ---------- */
-  --color-background: #f9f8f6;       /* Warm Alabaster — feels like paper */
-  --color-foreground: #1a1a1a;       /* Rich Charcoal — never pure black  */
-  --color-muted: #ebe5de;            /* Pale Taupe — subtle elevation     */
+  --color-background: #f9f8f6; /* Warm Alabaster — feels like paper */
+  --color-foreground: #1a1a1a; /* Rich Charcoal — never pure black  */
+  --color-muted: #ebe5de; /* Pale Taupe — subtle elevation     */
   --color-muted-foreground: #6c6863; /* Warm Grey — secondary text        */
-  --color-accent: #c2a770;           /* Antique Gold — refined, aged brass */
+  --color-accent: #c2a770; /* Antique Gold — refined, aged brass */
   --color-accent-foreground: #ffffff;
 
   /* ---------- Dividers & borders (use with opacity) ---------- */
@@ -22,19 +22,18 @@
   --color-border-strong: rgba(26, 26, 26, 0.3);
 
   /* ---------- Status colors (softer, editorial palette) ---------- */
-  --color-shortage: #8b2635;         /* Deep Burgundy — replaces raw red  */
-  --color-healthy: #3a5a40;          /* Forest Green — replaces raw green */
-  --color-overstock: #8b7355;        /* Warm Bronze — replaces raw blue   */
+  --color-shortage: #8b2635; /* Deep Burgundy — replaces raw red  */
+  --color-healthy: #3a5a40; /* Forest Green — replaces raw green */
+  --color-overstock: #8b7355; /* Warm Bronze — replaces raw blue   */
   --color-neutral: #6c6863;
 
   /* ---------- ABC grading ---------- */
-  --color-abc-a: #1a1a1a;            /* Top tier = richest contrast */
+  --color-abc-a: #1a1a1a; /* Top tier = richest contrast */
   --color-abc-b: #6c6863;
   --color-abc-c: #a89888;
 
   /* ---------- Typography (wired via next/font variables) ---------- */
-  --font-sans: var(--font-inter), var(--font-noto-sans-tc), -apple-system,
-    "Segoe UI", "Microsoft JhengHei", sans-serif;
+  --font-sans: var(--font-inter), var(--font-noto-sans-tc), -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
   --font-serif: var(--font-playfair), var(--font-noto-serif-tc), Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), "Cascadia Code", Consolas, monospace;
 

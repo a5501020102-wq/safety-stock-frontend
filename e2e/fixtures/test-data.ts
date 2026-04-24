@@ -1,9 +1,6 @@
 import path from "path";
 
-export const SALES_FILE = path.resolve(
-  __dirname,
-  "../../../data/2026_01_01_2026_04_e.g電線.xlsx"
-);
+export const SALES_FILE = path.resolve(__dirname, "../../../data/2026_01_01_2026_04_e.g電線.xlsx");
 
 export const EXPECTED_SALES_META = {
   recordCount: 2741,

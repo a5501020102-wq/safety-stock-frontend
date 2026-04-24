@@ -30,8 +30,8 @@ export function AnalysisEmpty() {
             : "Upload the sales ledger to unlock this section."}
         </p>
         <p className="mt-3 font-sans text-sm leading-relaxed text-muted-foreground">
-          The Analysis spread will render here: a parameters snapshot, summary
-          cards, and a full results table with filters and export actions.
+          The Analysis spread will render here: a parameters snapshot, summary cards, and a full results table with
+          filters and export actions.
         </p>
       </div>
     </div>

@@ -47,22 +47,17 @@ export default function Home() {
 
         {/* Subheading */}
         <p className="mt-12 max-w-xl font-sans text-base md:text-lg leading-relaxed text-muted-foreground">
-          A deliberate approach to inventory intelligence. Upload your sales
-          history, configure your policy, and read the resulting analysis
-          like the editorial spread it deserves to be.
+          A deliberate approach to inventory intelligence. Upload your sales history, configure your policy, and read
+          the resulting analysis like the editorial spread it deserves to be.
         </p>
 
         {/* Masthead footer rule */}
         <div className="mt-24 border-t border-foreground/20 pt-6 flex items-end justify-between">
           <div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Issue · 05
-            </span>
+            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Issue · 05</span>
           </div>
           <div className="text-right">
-            <span className="font-serif italic text-sm text-muted-foreground">
-              Safety Stock Automation v5.0
-            </span>
+            <span className="font-serif italic text-sm text-muted-foreground">Safety Stock Automation v5.0</span>
           </div>
         </div>
 
@@ -72,20 +67,13 @@ export default function Home() {
         </div>
 
         {/* Right-side editorial apparatus (xl+) */}
-        <aside
-          aria-hidden="true"
-          className="absolute right-16 top-32 hidden xl:flex flex-col gap-16 w-52 select-none"
-        >
+        <aside aria-hidden="true" className="absolute right-16 top-32 hidden xl:flex flex-col gap-16 w-52 select-none">
           <div className="text-right">
             <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               Printed
             </span>
-            <span className="mt-3 block font-serif text-2xl italic leading-none text-foreground">
-              MMXXVI
-            </span>
-            <span className="mt-1 block font-sans text-xs tracking-[0.2em] text-muted-foreground">
-              APR · XV
-            </span>
+            <span className="mt-3 block font-serif text-2xl italic leading-none text-foreground">MMXXVI</span>
+            <span className="mt-1 block font-sans text-xs tracking-[0.2em] text-muted-foreground">APR · XV</span>
           </div>
 
           <div className="text-right border-t border-foreground/20 pt-6">
@@ -94,21 +82,15 @@ export default function Home() {
             </span>
             <ol className="mt-4 space-y-2 font-serif text-sm text-foreground">
               <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
-                  I
-                </span>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">I</span>
                 Sources
               </li>
               <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
-                  II
-                </span>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">II</span>
                 Configuration
               </li>
               <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">
-                  III
-                </span>
+                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">III</span>
                 Analysis
               </li>
             </ol>
@@ -116,8 +98,7 @@ export default function Home() {
 
           <div className="text-right border-t border-foreground/20 pt-6">
             <p className="font-serif italic text-sm leading-relaxed text-muted-foreground">
-              &ldquo;The most valuable inventory is the one you didn&apos;t need
-              to carry.&rdquo;
+              &ldquo;The most valuable inventory is the one you didn&apos;t need to carry.&rdquo;
             </p>
             <span className="mt-3 block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               — Editor&apos;s note
@@ -132,10 +113,7 @@ export default function Home() {
           ========================================================== */}
       <WorkflowProvider>
         {/* Section 01 · Sources */}
-        <section
-          id="sources"
-          className="relative px-8 md:px-16 py-20 md:py-32"
-        >
+        <section id="sources" className="relative px-8 md:px-16 py-20 md:py-32">
           <SectionHeader
             numeral="01"
             overline="Sources"
@@ -143,9 +121,8 @@ export default function Home() {
             italicAccent="selected."
             deck={
               <>
-                Three inputs set the foundation for every analysis that follows.
-                Only the sales ledger is required; price and plan sheets refine
-                the interpretation.
+                Three inputs set the foundation for every analysis that follows. Only the sales ledger is required;
+                price and plan sheets refine the interpretation.
               </>
             }
             meta="Upload"
@@ -155,10 +132,7 @@ export default function Home() {
         </section>
 
         {/* Section 02 · Configuration */}
-        <section
-          id="configuration"
-          className="relative px-8 md:px-16 py-20 md:py-32"
-        >
+        <section id="configuration" className="relative px-8 md:px-16 py-20 md:py-32">
           <SectionHeader
             numeral="02"
             overline="Configuration"
@@ -166,8 +140,8 @@ export default function Home() {
             italicAccent="policy."
             deck={
               <>
-                Service level, lead time, ABC thresholds — the knobs that turn
-                raw demand into a considered reorder point.
+                Service level, lead time, ABC thresholds — the knobs that turn raw demand into a considered reorder
+                point.
               </>
             }
             meta="Parameters"
@@ -182,10 +156,7 @@ export default function Home() {
         </section>
 
         {/* Section 03 · Analysis */}
-        <section
-          id="analysis"
-          className="relative px-8 md:px-16 py-20 md:py-32"
-        >
+        <section id="analysis" className="relative px-8 md:px-16 py-20 md:py-32">
           <SectionHeader
             numeral="03"
             overline="Analysis"
@@ -193,8 +164,7 @@ export default function Home() {
             italicAccent="calculation."
             deck={
               <>
-                The results spread: summary statistics, per-SKU detail,
-                excluded items, and export to Excel or SAP MM17.
+                The results spread: summary statistics, per-SKU detail, excluded items, and export to Excel or SAP MM17.
               </>
             }
             meta="Results"
@@ -222,16 +192,11 @@ export default function Home() {
             </p>
           </div>
           <div className="text-left md:text-right">
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Engine
-            </span>
-            <span className="mt-2 block font-mono text-xs text-foreground">
-              Python · Flask · Next.js 16
-            </span>
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Engine</span>
+            <span className="mt-2 block font-mono text-xs text-foreground">Python · Flask · Next.js 16</span>
           </div>
         </div>
       </footer>
     </main>
   );
 }
-

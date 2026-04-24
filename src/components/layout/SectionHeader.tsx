@@ -39,27 +39,15 @@ interface SectionHeaderProps {
  * Intentionally asymmetric: the number lives on the LEFT rule, the meta
  * (if provided) floats to the far right. Desktop only; stacks on mobile.
  */
-export function SectionHeader({
-  numeral,
-  overline,
-  title,
-  italicAccent,
-  deck,
-  meta,
-  className,
-}: SectionHeaderProps) {
+export function SectionHeader({ numeral, overline, title, italicAccent, deck, meta, className }: SectionHeaderProps) {
   return (
     <header className={cn("w-full", className)}>
       {/* Top rule + metadata row */}
       <div className="flex items-center justify-between gap-6 border-t border-foreground/25 pt-6">
         <div className="flex items-center gap-6">
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-foreground">
-            {numeral}
-          </span>
+          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-foreground">{numeral}</span>
           <span className="h-px w-6 md:w-10 bg-foreground/40" />
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            {overline}
-          </span>
+          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{overline}</span>
         </div>
         {meta ? (
           <div className="hidden md:block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -81,9 +69,7 @@ export function SectionHeader({
 
       {/* Deck / subtitle */}
       {deck ? (
-        <p className="mt-8 max-w-xl font-sans text-base md:text-lg leading-relaxed text-muted-foreground">
-          {deck}
-        </p>
+        <p className="mt-8 max-w-xl font-sans text-base md:text-lg leading-relaxed text-muted-foreground">{deck}</p>
       ) : null}
     </header>
   );

@@ -5,13 +5,7 @@
  *
  *   cn("a", cond && "b", undefined, "c") // -> "a b c"  or "a c" if !cond
  */
-export type ClassValue =
-  | string
-  | number
-  | null
-  | undefined
-  | false
-  | ClassValue[];
+export type ClassValue = string | number | null | undefined | false | ClassValue[];
 
 export function cn(...inputs: ClassValue[]): string {
   const out: string[] = [];

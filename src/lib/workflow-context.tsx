@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type {
   CalculateRequestParams,
   CalculationResponse,
@@ -34,10 +27,7 @@ import type {
 
 export type UploadSlotType = "sales" | "price" | "plan";
 
-type UploadValue =
-  | UploadSalesResponse
-  | UploadPriceResponse
-  | UploadPlanResponse;
+type UploadValue = UploadSalesResponse | UploadPriceResponse | UploadPlanResponse;
 
 export interface WorkflowState {
   uploads: {
@@ -139,14 +129,9 @@ function clearPersisted() {
 // ---------------------------------------------------------------------------
 
 export function WorkflowProvider({ children }: { children: React.ReactNode }) {
-  const [uploads, setUploads] = useState<WorkflowState["uploads"]>(
-    INITIAL_STATE.uploads
-  );
-  const [parameters, setParametersState] = useState<CalculateRequestParams>(
-    DEFAULT_PARAMETERS
-  );
-  const [calculationResult, setCalculationResult] =
-    useState<CalculationResponse | null>(null);
+  const [uploads, setUploads] = useState<WorkflowState["uploads"]>(INITIAL_STATE.uploads);
+  const [parameters, setParametersState] = useState<CalculateRequestParams>(DEFAULT_PARAMETERS);
+  const [calculationResult, setCalculationResult] = useState<CalculationResponse | null>(null);
   const [isCalculating, setCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
@@ -165,23 +150,17 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     savePersisted({ uploads, parameters });
   }, [uploads, parameters]);
 
-  const setUpload = useCallback(
-    (slot: UploadSlotType, value: UploadValue) => {
-      setUploads((prev) => ({ ...prev, [slot]: value }));
-    },
-    []
-  ) as WorkflowActions["setUpload"];
+  const setUpload = useCallback((slot: UploadSlotType, value: UploadValue) => {
+    setUploads((prev) => ({ ...prev, [slot]: value }));
+  }, []) as WorkflowActions["setUpload"];
 
   const clearUpload = useCallback((slot: UploadSlotType) => {
     setUploads((prev) => ({ ...prev, [slot]: null }));
   }, []);
 
-  const setParameters = useCallback(
-    (patch: Partial<CalculateRequestParams>) => {
-      setParametersState((prev) => ({ ...prev, ...patch }));
-    },
-    []
-  );
+  const setParameters = useCallback((patch: Partial<CalculateRequestParams>) => {
+    setParametersState((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   const reset = useCallback(() => {
     setUploads(INITIAL_STATE.uploads);
@@ -220,11 +199,7 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  return (
-    <WorkflowContext.Provider value={value}>
-      {children}
-    </WorkflowContext.Provider>
-  );
+  return <WorkflowContext.Provider value={value}>{children}</WorkflowContext.Provider>;
 }
 
 // ---------------------------------------------------------------------------

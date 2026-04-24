@@ -4,21 +4,11 @@ import { useCallback, useRef, useState } from "react";
 import { ApiClientError, api } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useUploadSlot, type UploadSlotType } from "@/lib/workflow-context";
-import type {
-  UploadPlanResponse,
-  UploadPriceResponse,
-  UploadSalesResponse,
-} from "@/lib/types";
+import type { UploadPlanResponse, UploadPriceResponse, UploadSalesResponse } from "@/lib/types";
 
-type UploadValue =
-  | UploadSalesResponse
-  | UploadPriceResponse
-  | UploadPlanResponse;
+type UploadValue = UploadSalesResponse | UploadPriceResponse | UploadPlanResponse;
 
-type UploadFn = (
-  file: File,
-  options?: { onProgress?: (e: { percent: number }) => void }
-) => Promise<UploadValue>;
+type UploadFn = (file: File, options?: { onProgress?: (e: { percent: number }) => void }) => Promise<UploadValue>;
 
 interface UploadCardProps {
   slot: UploadSlotType;
@@ -42,13 +32,7 @@ interface UploadCardProps {
  * Layout follows the luxury spec: 0 radius, top-border only, generous
  * padding, gold accent on drag-over and focus, 500ms transitions.
  */
-export function UploadCard({
-  slot,
-  numeral,
-  title,
-  required = false,
-  hint,
-}: UploadCardProps) {
+export function UploadCard({ slot, numeral, title, required = false, hint }: UploadCardProps) {
   const { value, set, clear } = useUploadSlot(slot);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,8 +45,8 @@ export function UploadCard({
     slot === "sales"
       ? (api.uploadSales as UploadFn)
       : slot === "price"
-      ? (api.uploadPrice as UploadFn)
-      : (api.uploadPlan as UploadFn);
+        ? (api.uploadPrice as UploadFn)
+        : (api.uploadPlan as UploadFn);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -134,11 +118,7 @@ export function UploadCard({
   // Render
   // --------------------------------------------------------------------
 
-  const borderAccent = isDragOver
-    ? "border-t-accent"
-    : value
-    ? "border-t-foreground"
-    : "border-t-foreground/40";
+  const borderAccent = isDragOver ? "border-t-accent" : value ? "border-t-foreground" : "border-t-foreground/40";
 
   return (
     <article
@@ -173,13 +153,9 @@ export function UploadCard({
       </div>
 
       {/* Card title */}
-      <h3 className="mt-6 font-serif text-3xl md:text-4xl leading-[1.05] text-foreground">
-        {title}
-      </h3>
+      <h3 className="mt-6 font-serif text-3xl md:text-4xl leading-[1.05] text-foreground">{title}</h3>
 
-      <p className="mt-3 font-sans text-sm leading-relaxed text-muted-foreground">
-        {hint}
-      </p>
+      <p className="mt-3 font-sans text-sm leading-relaxed text-muted-foreground">{hint}</p>
 
       {/* Divider */}
       <div className="mt-6 h-px w-full bg-foreground/15" />
@@ -197,9 +173,7 @@ export function UploadCard({
 
       {/* Error message */}
       {error && !isUploading ? (
-        <p className="mt-4 font-sans text-xs text-[color:var(--color-shortage)]">
-          {error}
-        </p>
+        <p className="mt-4 font-sans text-xs text-[color:var(--color-shortage)]">{error}</p>
       ) : null}
 
       {/* Hidden native input */}
@@ -220,13 +194,7 @@ export function UploadCard({
 // Sub-states
 // ---------------------------------------------------------------------------
 
-function UploadIdle({
-  onBrowse,
-  hasError,
-}: {
-  onBrowse: () => void;
-  hasError: boolean;
-}) {
+function UploadIdle({ onBrowse, hasError }: { onBrowse: () => void; hasError: boolean }) {
   return (
     <div className="flex-1 flex flex-col items-start justify-end gap-4">
       <p className="font-serif italic text-base text-muted-foreground">
@@ -255,9 +223,7 @@ function UploadBusy({ progress }: { progress: number }) {
   return (
     <div className="flex-1 flex flex-col justify-end gap-4">
       <div className="flex items-end justify-between">
-        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Transmitting
-        </span>
+        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Transmitting</span>
         <span className="font-mono text-sm tabular-nums text-foreground">
           {pct}
           <span className="text-muted-foreground text-xs">%</span>
@@ -269,20 +235,12 @@ function UploadBusy({ progress }: { progress: number }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="font-serif italic text-sm text-muted-foreground">
-        Reading the ledger…
-      </p>
+      <p className="font-serif italic text-sm text-muted-foreground">Reading the ledger…</p>
     </div>
   );
 }
 
-function UploadDone({
-  slot,
-  value,
-}: {
-  slot: UploadSlotType;
-  value: UploadValue;
-}) {
+function UploadDone({ slot, value }: { slot: UploadSlotType; value: UploadValue }) {
   const rows: Array<[string, React.ReactNode]> = [];
   rows.push([
     "File",
@@ -295,17 +253,9 @@ function UploadDone({
   if (slot === "sales") {
     const v = value as UploadSalesResponse;
     rows.push(["Records", v.recordCount.toLocaleString()]);
-    rows.push([
-      "Sites",
-      v.detectedSites.length > 0 ? v.detectedSites.join(", ") : "—",
-    ]);
+    rows.push(["Sites", v.detectedSites.length > 0 ? v.detectedSites.join(", ") : "—"]);
     rows.push(["SKUs", v.detectedSkus.toLocaleString()]);
-    rows.push([
-      "Range",
-      v.dateRange.start && v.dateRange.end
-        ? `${v.dateRange.start} → ${v.dateRange.end}`
-        : "—",
-    ]);
+    rows.push(["Range", v.dateRange.start && v.dateRange.end ? `${v.dateRange.start} → ${v.dateRange.end}` : "—"]);
     if (v.maxDate) {
       rows.push(["Latest", v.maxDate.split("T")[0]]);
     }
@@ -315,25 +265,15 @@ function UploadDone({
   } else if (slot === "plan") {
     const v = value as UploadPlanResponse;
     rows.push(["Items", v.itemCount.toLocaleString()]);
-    rows.push([
-      "Months",
-      v.detectedMonths.length > 0 ? `${v.detectedMonths.length} detected` : "—",
-    ]);
+    rows.push(["Months", v.detectedMonths.length > 0 ? `${v.detectedMonths.length} detected` : "—"]);
   }
 
   return (
     <dl className="flex-1 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 content-start text-sm">
       {rows.map(([label, val]) => (
-        <div
-          key={label}
-          className="contents text-sm"
-        >
-          <dt className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground pt-1">
-            {label}
-          </dt>
-          <dd className="font-sans text-foreground">
-            {val}
-          </dd>
+        <div key={label} className="contents text-sm">
+          <dt className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground pt-1">{label}</dt>
+          <dd className="font-sans text-foreground">{val}</dd>
         </div>
       ))}
     </dl>

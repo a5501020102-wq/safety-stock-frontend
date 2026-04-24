@@ -75,9 +75,9 @@ export class ApiClientError extends Error {
 // ----------------------------------------------------------------------------
 
 export interface UploadProgressEvent {
-  loaded: number;   // bytes sent so far
-  total: number;    // total bytes (0 if unknown)
-  percent: number;  // 0-100 (0 if total unknown)
+  loaded: number; // bytes sent so far
+  total: number; // total bytes (0 if unknown)
+  percent: number; // 0-100 (0 if total unknown)
 }
 
 export interface UploadOptions {
@@ -94,11 +94,7 @@ export interface UploadOptions {
  * cancellation. Surfaces the backend's standard `{success, error, code}`
  * error contract as an ApiClientError.
  */
-export function uploadFileWithProgress<T>(
-  path: string,
-  file: File,
-  options: UploadOptions = {}
-): Promise<T> {
+export function uploadFileWithProgress<T>(path: string, file: File, options: UploadOptions = {}): Promise<T> {
   const { onProgress, signal } = options;
   return new Promise<T>((resolve, reject) => {
     if (signal?.aborted) {
@@ -123,36 +119,17 @@ export function uploadFileWithProgress<T>(
       try {
         data = JSON.parse(xhr.responseText);
       } catch {
-        reject(
-          new ApiClientError(
-            `Upload: non-JSON response (HTTP ${xhr.status})`,
-            "INTERNAL_ERROR",
-            xhr.status
-          )
-        );
+        reject(new ApiClientError(`Upload: non-JSON response (HTTP ${xhr.status})`, "INTERNAL_ERROR", xhr.status));
         return;
       }
 
       if (isApiError(data)) {
-        reject(
-          new ApiClientError(
-            data.error,
-            data.code,
-            xhr.status,
-            data.detail
-          )
-        );
+        reject(new ApiClientError(data.error, data.code, xhr.status, data.detail));
         return;
       }
 
       if (xhr.status < 200 || xhr.status >= 300) {
-        reject(
-          new ApiClientError(
-            `Upload failed with HTTP ${xhr.status}`,
-            "INTERNAL_ERROR",
-            xhr.status
-          )
-        );
+        reject(new ApiClientError(`Upload failed with HTTP ${xhr.status}`, "INTERNAL_ERROR", xhr.status));
         return;
       }
 
@@ -160,13 +137,7 @@ export function uploadFileWithProgress<T>(
     });
 
     xhr.addEventListener("error", () => {
-      reject(
-        new ApiClientError(
-          "Network error during upload",
-          "INTERNAL_ERROR",
-          0
-        )
-      );
+      reject(new ApiClientError("Network error during upload", "INTERNAL_ERROR", 0));
     });
 
     xhr.addEventListener("abort", () => {
@@ -177,9 +148,7 @@ export function uploadFileWithProgress<T>(
       const onAbort = () => xhr.abort();
       signal.addEventListener("abort", onAbort, { once: true });
       // Make sure we clean up the listener once the request settles.
-      xhr.addEventListener("loadend", () =>
-        signal.removeEventListener("abort", onAbort)
-      );
+      xhr.addEventListener("loadend", () => signal.removeEventListener("abort", onAbort));
     }
 
     xhr.open("POST", url);
@@ -191,18 +160,13 @@ export function uploadFileWithProgress<T>(
 // Core fetch helpers
 // ----------------------------------------------------------------------------
 
-async function jsonRequest<T>(
-  path: string,
-  init: RequestInit = {}
-): Promise<T> {
+async function jsonRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const url = `${getApiBase()}${path}`;
   const res = await fetch(url, {
     ...init,
     headers: {
       Accept: "application/json",
-      ...(init.body && !(init.body instanceof FormData)
-        ? { "Content-Type": "application/json" }
-        : {}),
+      ...(init.body && !(init.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(init.headers ?? {}),
     },
     cache: "no-store",
@@ -213,11 +177,7 @@ async function jsonRequest<T>(
   try {
     data = await res.json();
   } catch {
-    throw new ApiClientError(
-      `Server returned non-JSON response (HTTP ${res.status})`,
-      "INTERNAL_ERROR",
-      res.status
-    );
+    throw new ApiClientError(`Server returned non-JSON response (HTTP ${res.status})`, "INTERNAL_ERROR", res.status);
   }
 
   // Error contract: { success: false, error, code }
@@ -226,11 +186,7 @@ async function jsonRequest<T>(
   }
 
   if (!res.ok) {
-    throw new ApiClientError(
-      `HTTP ${res.status}`,
-      "INTERNAL_ERROR",
-      res.status
-    );
+    throw new ApiClientError(`HTTP ${res.status}`, "INTERNAL_ERROR", res.status);
   }
 
   return data as T;
@@ -238,10 +194,7 @@ async function jsonRequest<T>(
 
 function isApiError(data: unknown): data is ApiError {
   return (
-    typeof data === "object" &&
-    data !== null &&
-    "success" in data &&
-    (data as { success: unknown }).success === false
+    typeof data === "object" && data !== null && "success" in data && (data as { success: unknown }).success === false
   );
 }
 
@@ -249,10 +202,7 @@ function isApiError(data: unknown): data is ApiError {
  * Binary download. Returns the Blob along with the filename extracted from
  * Content-Disposition (so we can offer the correct save-as name).
  */
-async function downloadRequest(
-  path: string,
-  body: unknown
-): Promise<{ blob: Blob; filename: string }> {
+async function downloadRequest(path: string, body: unknown): Promise<{ blob: Blob; filename: string }> {
   const url = `${getApiBase()}${path}`;
   const res = await fetch(url, {
     method: "POST",
@@ -268,26 +218,16 @@ async function downloadRequest(
     try {
       data = await res.json();
     } catch {
-      throw new ApiClientError(
-        `Download failed: HTTP ${res.status}`,
-        "EXPORT_FAILED",
-        res.status
-      );
+      throw new ApiClientError(`Download failed: HTTP ${res.status}`, "EXPORT_FAILED", res.status);
     }
     if (isApiError(data)) {
       throw new ApiClientError(data.error, data.code, res.status, data.detail);
     }
-    throw new ApiClientError(
-      `HTTP ${res.status}`,
-      "EXPORT_FAILED",
-      res.status
-    );
+    throw new ApiClientError(`HTTP ${res.status}`, "EXPORT_FAILED", res.status);
   }
 
   const blob = await res.blob();
-  const filename = parseContentDispositionFilename(
-    res.headers.get("content-disposition")
-  );
+  const filename = parseContentDispositionFilename(res.headers.get("content-disposition"));
   return { blob, filename };
 }
 

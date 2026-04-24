@@ -103,7 +103,11 @@ export class HomePage {
     this.calculateBtn = page.locator("section#configuration button").filter({
       hasText: /calculate|recalculate|calculating/i,
     });
-    this.calculateStatus = page.locator("section#configuration p.font-serif.italic.text-xl, section#configuration p.font-serif.italic.md\\:text-2xl").first();
+    this.calculateStatus = page
+      .locator(
+        "section#configuration p.font-serif.italic.text-xl, section#configuration p.font-serif.italic.md\\:text-2xl"
+      )
+      .first();
     this.calculateError = page.locator('[class*="color-shortage"]').filter({ hasText: /\[/ });
 
     // Analysis
@@ -147,10 +151,7 @@ export class HomePage {
   }
 
   async waitForResults() {
-    await this.page.waitForResponse(
-      (r) => r.url().includes("/api/calculate") && r.ok(),
-      { timeout: 30_000 }
-    );
+    await this.page.waitForResponse((r) => r.url().includes("/api/calculate") && r.ok(), { timeout: 30_000 });
     await expect(this.analysisSection.locator("table").first()).toBeVisible({ timeout: 10_000 });
   }
 
@@ -173,7 +174,10 @@ export class HomePage {
   }
 
   async toggleMonth(monthName: string) {
-    await this.page.locator(`label`).filter({ hasText: new RegExp(`^\\d+\\s*${monthName}$`, "i") }).click();
+    await this.page
+      .locator(`label`)
+      .filter({ hasText: new RegExp(`^\\d+\\s*${monthName}$`, "i") })
+      .click();
   }
 
   async getResultsRowCount(): Promise<number> {

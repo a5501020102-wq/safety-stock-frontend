@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Inter,
-  Playfair_Display,
-  Noto_Sans_TC,
-  Noto_Serif_TC,
-  JetBrains_Mono,
-} from "next/font/google";
+import { Inter, Playfair_Display, Noto_Sans_TC, Noto_Serif_TC, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { PaperNoise } from "@/components/layout/PaperNoise";
 import { VerticalGridlines } from "@/components/layout/VerticalGridlines";
@@ -53,8 +47,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Safety Stock — Editorial Intelligence",
-  description:
-    "Curated inventory analysis — 安全庫存自動化 v5.0",
+  description: "Curated inventory analysis — 安全庫存自動化 v5.0",
 };
 
 export default function RootLayout({

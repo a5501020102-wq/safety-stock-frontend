@@ -103,8 +103,8 @@ function ExportBar({ result }: { result: CalculationResponse }) {
           mode: result.mode,
           siteFilter,
           granularity,
-          summary: ("summary" in result) ? result.summary : undefined,
-          results: ("results" in result) ? result.results : undefined,
+          summary: "summary" in result ? result.summary : undefined,
+          results: "results" in result ? result.results : undefined,
         });
       }
       triggerDownload(resp.blob, resp.filename);
@@ -134,8 +134,8 @@ function ExportBar({ result }: { result: CalculationResponse }) {
           mode: result.mode,
           format: "xlsx",
           siteFilter,
-          summary: ("summary" in result) ? result.summary : undefined,
-          results: ("results" in result) ? result.results : undefined,
+          summary: "summary" in result ? result.summary : undefined,
+          results: "results" in result ? result.results : undefined,
         });
       }
       triggerDownload(resp.blob, resp.filename);
@@ -165,9 +165,7 @@ function ExportBar({ result }: { result: CalculationResponse }) {
 
   return (
     <div className="border-t border-foreground/20 pt-6 flex flex-wrap items-center gap-6">
-      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Export
-      </span>
+      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Export</span>
 
       <button
         type="button"
@@ -191,7 +189,9 @@ function ExportBar({ result }: { result: CalculationResponse }) {
         >
           <option value="all">All sites</option>
           {availableSites.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>
@@ -332,11 +332,7 @@ function TableBlock({
     }
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.sku.toLowerCase().includes(q) ||
-          (r.name ?? "").toLowerCase().includes(q)
-      );
+      list = list.filter((r) => r.sku.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q));
     }
     // Sort (immutable: clone before sorting)
     const gran = parameters?.granularity ?? "monthly";
@@ -392,12 +388,8 @@ function TableBlock({
   const totalPages = Math.max(1, Math.ceil(itemCount / pageSize));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * pageSize;
-  const pageSlice = grouped
-    ? grouped.slice(start, start + pageSize)
-    : null;
-  const flatPageSlice = grouped
-    ? null
-    : filteredSorted.slice(start, start + pageSize);
+  const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
+  const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -405,43 +397,25 @@ function TableBlock({
   }, [statusFilter, siteFilter, query, sort]);
 
   const onSort = (key: SortKey) => {
-    setSort((prev) =>
-      prev.key === key
-        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
-        : { key, dir: "desc" }
-    );
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }));
   };
 
   return (
     <section>
       {/* Heading */}
       <div className="border-t border-foreground/20 pt-6">
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Table
-        </span>
+        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Table</span>
         <h3 className="mt-2 font-serif text-3xl md:text-4xl leading-tight text-foreground">
           {heading} <em className="italic text-accent">{italicAccent}.</em>
         </h3>
-        <p className="mt-2 font-sans text-sm text-muted-foreground max-w-xl">
-          {deck}
-        </p>
+        <p className="mt-2 font-sans text-sm text-muted-foreground max-w-xl">{deck}</p>
       </div>
 
       {/* Controls row */}
       <div className="mt-8 flex flex-col lg:flex-row lg:items-end gap-6 lg:gap-10">
-        <StatusTabs
-          counts={statusCounts}
-          active={statusFilter}
-          onChange={setStatusFilter}
-        />
+        <StatusTabs counts={statusCounts} active={statusFilter} onChange={setStatusFilter} />
         <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto">
-          {showSiteFilter ? (
-            <SiteDropdown
-              sites={sites}
-              value={siteFilter}
-              onChange={setSiteFilter}
-            />
-          ) : null}
+          {showSiteFilter ? <SiteDropdown sites={sites} value={siteFilter} onChange={setSiteFilter} /> : null}
           <SearchInput value={query} onChange={setQuery} />
         </div>
       </div>
@@ -503,13 +477,9 @@ function TableBlock({
                 </td>
               </tr>
             ) : pageSlice ? (
-              pageSlice.map((group) => (
-                <SkuGroup key={group.sku} group={group} />
-              ))
+              pageSlice.map((group) => <SkuGroup key={group.sku} group={group} />)
             ) : flatPageSlice ? (
-              flatPageSlice.map((r) => (
-                <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode={mode} />
-              ))
+              flatPageSlice.map((r) => <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode={mode} />)
             ) : null}
           </tbody>
         </table>
@@ -569,9 +539,7 @@ function SkuGroup({ group }: { group: SkuGroupData }) {
           <span className="font-mono text-xs font-medium text-foreground">{group.sku}</span>
         </td>
         <td className="py-3 px-3">
-          <span className="font-sans text-sm text-foreground line-clamp-1 max-w-xs block">
-            {group.name || "—"}
-          </span>
+          <span className="font-sans text-sm text-foreground line-clamp-1 max-w-xs block">{group.name || "—"}</span>
         </td>
         <td className="py-3 px-3 text-center">
           <AbcBadge cls={group.abcClass} priceMissing={group.isPriceMissing} />
@@ -584,9 +552,8 @@ function SkuGroup({ group }: { group: SkuGroupData }) {
         <td colSpan={8} className="py-3 px-3" />
       </tr>
       {/* Site rows within group */}
-      {!collapsed && group.items.map((r) => (
-        <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode="all" indent />
-      ))}
+      {!collapsed &&
+        group.items.map((r) => <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode="all" indent />)}
     </>
   );
 }
@@ -630,12 +597,10 @@ function ExpandableResultRow({
         </Cell>
         <Cell>
           <span className="font-sans text-sm text-foreground/80 line-clamp-1 max-w-xs block">
-            {indent ? "" : (row.name || "—")}
+            {indent ? "" : row.name || "—"}
           </span>
         </Cell>
-        <Cell align="center">
-          {indent ? null : <AbcBadge cls={row.abcClass} priceMissing={row.isPriceMissing} />}
-        </Cell>
+        <Cell align="center">{indent ? null : <AbcBadge cls={row.abcClass} priceMissing={row.isPriceMissing} />}</Cell>
         <NumericCell value={row.totalQty} decimals={0} />
         <NumericCell value={row.meanDemand} decimals={0} />
         <NumericCell value={dailyDemand} decimals={0} />
@@ -648,10 +613,7 @@ function ExpandableResultRow({
       </tr>
       {expanded ? (
         <tr>
-          <td
-            colSpan={colCount}
-            className="border-l-2 border-l-[color:var(--color-accent)] bg-[#F3EEE7]/50 px-6 py-5"
-          >
+          <td colSpan={colCount} className="border-l-2 border-l-[color:var(--color-accent)] bg-[#F3EEE7]/50 px-6 py-5">
             <DemandDetail row={row} />
           </td>
         </tr>
@@ -664,18 +626,10 @@ function ExpandableResultRow({
 // Demand heatmap (expandable row content)
 // ---------------------------------------------------------------------------
 
-function DemandDetail({
-  row,
-}: {
-  row: SkuResult;
-}) {
+function DemandDetail({ row }: { row: SkuResult }) {
   const values = row.monthlyValues;
   if (!values || values.length === 0) {
-    return (
-      <span className="font-serif italic text-sm text-muted-foreground">
-        No period data available.
-      </span>
-    );
+    return <span className="font-serif italic text-sm text-muted-foreground">No period data available.</span>;
   }
 
   const mean = row.meanDemand;
@@ -693,9 +647,11 @@ function DemandDetail({
           {values.map((v, i) => {
             const h = Math.max(2, Math.round((v / maxVal) * 56));
             const bg =
-              v <= 0 ? "bg-[color:var(--color-shortage)]/20"
-              : v >= mean ? "bg-[color:var(--color-healthy)]/30"
-              : "bg-[color:var(--color-accent)]/30";
+              v <= 0
+                ? "bg-[color:var(--color-shortage)]/20"
+                : v >= mean
+                  ? "bg-[color:var(--color-healthy)]/30"
+                  : "bg-[color:var(--color-accent)]/30";
             return (
               <div
                 key={i}
@@ -708,7 +664,10 @@ function DemandDetail({
         </div>
         <div className="mt-1 flex gap-[2px]">
           {values.map((v, i) => (
-            <span key={i} className="flex-1 min-w-[6px] max-w-[28px] text-center font-mono text-[8px] text-muted-foreground/50 tabular-nums truncate">
+            <span
+              key={i}
+              className="flex-1 min-w-[6px] max-w-[28px] text-center font-mono text-[8px] text-muted-foreground/50 tabular-nums truncate"
+            >
               {v > 0 ? formatNumber(v, 0) : "0"}
             </span>
           ))}
@@ -717,9 +676,7 @@ function DemandDetail({
 
       {/* Right: summary stats */}
       <div className="flex flex-col gap-3 min-w-[180px]">
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Summary
-        </span>
+        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Summary</span>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
           <span className="text-muted-foreground">Mean</span>
           <span className="text-right tabular-nums">{formatNumber(mean, 0)}</span>
@@ -736,7 +693,7 @@ function DemandDetail({
           <span className="text-muted-foreground">Periods</span>
           <span className="text-right tabular-nums">{values.length}</span>
           <span className="text-muted-foreground">Active</span>
-          <span className="text-right tabular-nums">{values.filter(v => v > 0).length}</span>
+          <span className="text-right tabular-nums">{values.filter((v) => v > 0).length}</span>
         </div>
       </div>
     </div>
@@ -777,29 +734,15 @@ function HeaderCell({
     >
       <span className="inline-flex items-center gap-1">
         {children}
-        {active ? (
-          <span className="text-accent">{sort!.dir === "asc" ? "↑" : "↓"}</span>
-        ) : null}
+        {active ? <span className="text-accent">{sort!.dir === "asc" ? "↑" : "↓"}</span> : null}
       </span>
     </th>
   );
 }
 
-function Cell({
-  children,
-  align = "left",
-}: {
-  children: React.ReactNode;
-  align?: "left" | "center" | "right";
-}) {
+function Cell({ children, align = "left" }: { children: React.ReactNode; align?: "left" | "center" | "right" }) {
   return (
-    <td
-      className={cn(
-        "py-3 px-3",
-        align === "right" && "text-right",
-        align === "center" && "text-center"
-      )}
-    >
+    <td className={cn("py-3 px-3", align === "right" && "text-right", align === "center" && "text-center")}>
       {children}
     </td>
   );
@@ -820,8 +763,8 @@ function NumericCell({
     statusTone === "red"
       ? "text-[color:var(--color-shortage)]"
       : statusTone === "blue"
-      ? "text-[color:var(--color-overstock)]"
-      : "text-foreground";
+        ? "text-[color:var(--color-overstock)]"
+        : "text-foreground";
 
   return (
     <td className="py-3 px-3 text-right">
@@ -842,9 +785,7 @@ function TrendCell({ label, pct }: { label?: string; pct?: number | null }) {
   const display = label ?? "—";
   return (
     <td className="py-3 px-3 text-right">
-      <span className="font-mono text-sm tabular-nums text-foreground">
-        {display}
-      </span>
+      <span className="font-mono text-sm tabular-nums text-foreground">{display}</span>
     </td>
   );
 }
@@ -854,8 +795,8 @@ function AbcBadge({ cls, priceMissing }: { cls: "A" | "B" | "C"; priceMissing?: 
     cls === "A"
       ? "bg-[color:var(--color-abc-a)] text-background"
       : cls === "B"
-      ? "bg-[color:var(--color-abc-b)] text-background"
-      : "bg-[color:var(--color-abc-c)] text-background";
+        ? "bg-[color:var(--color-abc-b)] text-background"
+        : "bg-[color:var(--color-abc-c)] text-background";
   return (
     <span
       className={cn(
@@ -897,14 +838,9 @@ function StatusTabs({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em]">
-              {f.description}
-            </span>
+            <span className="block font-sans text-[10px] uppercase tracking-[0.3em]">{f.description}</span>
             <span className="mt-1 block font-serif text-xl leading-none">
-              {f.label}{" "}
-              <span className="font-mono text-xs text-muted-foreground">
-                {count}
-              </span>
+              {f.label} <span className="font-mono text-xs text-muted-foreground">{count}</span>
             </span>
           </button>
         );
@@ -913,20 +849,10 @@ function StatusTabs({
   );
 }
 
-function SiteDropdown({
-  sites,
-  value,
-  onChange,
-}: {
-  sites: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function SiteDropdown({ sites, value, onChange }: { sites: string[]; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Site
-      </label>
+      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Site</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -947,18 +873,10 @@ function SiteDropdown({
   );
 }
 
-function SearchInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Search
-      </label>
+      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Search</label>
       <input
         type="search"
         placeholder="SKU or product name"
