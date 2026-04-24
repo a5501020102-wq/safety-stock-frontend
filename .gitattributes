@@ -1,0 +1,15 @@
+# 強制所有文字檔在 repo 內存 LF
+* text=auto eol=lf
+
+# 二進位檔案標示
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
