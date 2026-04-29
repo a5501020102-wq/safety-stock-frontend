@@ -20,7 +20,8 @@ jobs:
         with:
           repository: a5501020102-wq/safety-stock-automation
           path: safety-stock-automation
-          ref: feature/stateless-api
+          ref: main
+          token: ${{ secrets.BACKEND_REPO_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
