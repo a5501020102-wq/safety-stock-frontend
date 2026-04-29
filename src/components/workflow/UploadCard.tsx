@@ -265,7 +265,7 @@ function UploadDone({ slot, value }: { slot: UploadSlotType; value: UploadValue 
   } else if (slot === "plan") {
     const v = value as UploadPlanResponse;
     rows.push(["Items", v.itemCount.toLocaleString()]);
-    rows.push(["Months", v.detectedMonths.length > 0 ? `${v.detectedMonths.length} detected` : "—"]);
+    rows.push(["Horizon", v.planningHorizon ?? "—"]);
   }
 
   return (

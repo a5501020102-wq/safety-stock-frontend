@@ -51,6 +51,17 @@ export interface SkuResult {
   trendPct?: number | null;
   trendLabel?: string;
   monthlyValues: number[];
+
+  // Plan integration（選填，只在上傳 plan 報表後有值）
+  hasPlan?: boolean;
+  planStock?: number | null;
+  finalStock?: number | null;
+  minStock?: number | null;
+  minStockMonth?: string | null;
+  gap?: number | null;
+  suggestedOrder?: number;
+  firstShortageMonth?: string | null;
+  orderDeadline?: string | null;
 }
 
 export interface ExcludedSku {
@@ -146,6 +157,7 @@ export interface UploadPlanResponse extends UploadBase {
   itemCount: number;
   detectedMonths: string[];
   hasCumulativeColumns: boolean;
+  planningHorizon: string | null;
 }
 
 export type UploadResponse = UploadSalesResponse | UploadPriceResponse | UploadPlanResponse;

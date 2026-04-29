@@ -260,7 +260,9 @@ type SortKey =
   | "safetyStock"
   | "reorderPoint"
   | "maxInventory"
-  | "trendPct";
+  | "trendPct"
+  | "planStock"
+  | "suggestedOrder";
 type SortDir = "asc" | "desc";
 
 const STATUS_FILTERS: Array<{
@@ -298,6 +300,9 @@ function TableBlock({
   });
   const [page, setPage] = useState(1);
   const pageSize = 50;
+
+  // 判斷是否有任何結果包含 plan 資料
+  const hasPlanData = useMemo(() => results.some((r) => r.hasPlan), [results]);
 
   // 篩選條件變更時同步重置分頁到第 1 頁
   const setStatusFilter = useCallback((v: "all" | StockStatus) => {
@@ -404,6 +409,8 @@ function TableBlock({
   const start = (currentPage - 1) * pageSize;
   const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
   const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
+  const planExtraCols = hasPlanData ? 3 : 0;
+  const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const onSort = (key: SortKey) => {
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }));
@@ -474,22 +481,37 @@ function TableBlock({
               <HeaderCell sortKey="trendPct" sort={sort} onSort={onSort} align="right">
                 Trend
               </HeaderCell>
+              {hasPlanData ? (
+                <>
+                  <HeaderCell sortKey="planStock" sort={sort} onSort={onSort} align="right">
+                    Stock
+                  </HeaderCell>
+                  <HeaderCell sortKey="suggestedOrder" sort={sort} onSort={onSort} align="right">
+                    Order
+                  </HeaderCell>
+                  <HeaderCell sortKey={null} align="right">
+                    Shortage
+                  </HeaderCell>
+                </>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {itemCount === 0 ? (
               <tr>
                 <td
-                  colSpan={mode === "all" ? 13 : 12}
+                  colSpan={colCount}
                   className="py-20 text-center font-serif italic text-muted-foreground border-t border-foreground/10"
                 >
                   No SKUs match the current filters.
                 </td>
               </tr>
             ) : pageSlice ? (
-              pageSlice.map((group) => <SkuGroup key={group.sku} group={group} />)
+              pageSlice.map((group) => <SkuGroup key={group.sku} group={group} hasPlanData={hasPlanData} />)
             ) : flatPageSlice ? (
-              flatPageSlice.map((r) => <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode={mode} />)
+              flatPageSlice.map((r) => (
+                <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode={mode} hasPlanData={hasPlanData} />
+              ))
             ) : null}
           </tbody>
         </table>
@@ -530,7 +552,7 @@ interface SkuGroupData {
   items: SkuResult[];
 }
 
-function SkuGroup({ group }: { group: SkuGroupData }) {
+function SkuGroup({ group, hasPlanData = false }: { group: SkuGroupData; hasPlanData?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -563,7 +585,9 @@ function SkuGroup({ group }: { group: SkuGroupData }) {
       </tr>
       {/* Site rows within group */}
       {!collapsed &&
-        group.items.map((r) => <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode="all" indent />)}
+        group.items.map((r) => (
+          <ExpandableResultRow key={`${r.site}-${r.sku}`} row={r} mode="all" indent hasPlanData={hasPlanData} />
+        ))}
     </>
   );
 }
@@ -572,14 +596,17 @@ function ExpandableResultRow({
   row,
   mode,
   indent,
+  hasPlanData = false,
 }: {
   row: SkuResult;
   mode: "all" | "total" | "single";
   indent?: boolean;
+  hasPlanData?: boolean;
 }) {
   const { parameters } = useWorkflow();
   const [expanded, setExpanded] = useState(false);
-  const colCount = mode === "all" ? 13 : 12;
+  const planExtraCols = hasPlanData ? 3 : 0;
+  const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const gran = parameters.granularity ?? "monthly";
   const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters.workingDaysPerMonth ?? 30);
@@ -620,6 +647,15 @@ function ExpandableResultRow({
         <NumericCell value={row.reorderPoint} decimals={0} />
         <NumericCell value={row.maxInventory} decimals={0} />
         <TrendCell label={row.trendLabel} pct={row.trendPct} />
+        {hasPlanData ? (
+          <>
+            <NumericCell value={row.planStock ?? null} decimals={0} />
+            <NumericCell value={row.suggestedOrder ?? null} decimals={0} />
+            <Cell align="right">
+              <span className="font-mono text-xs text-muted-foreground">{row.firstShortageMonth ?? "—"}</span>
+            </Cell>
+          </>
+        ) : null}
       </tr>
       {expanded ? (
         <tr>
