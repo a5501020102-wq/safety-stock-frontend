@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
@@ -288,16 +288,30 @@ function TableBlock({
   mode: "all" | "total" | "single";
 }) {
   const { parameters } = useWorkflow();
-  // Filter state
-  const [statusFilter, setStatusFilter] = useState<"all" | StockStatus>("all");
-  const [siteFilter, setSiteFilter] = useState<string>("all");
-  const [query, setQuery] = useState("");
+  // Filter + pagination state
+  const [statusFilter, setStatusFilterRaw] = useState<"all" | StockStatus>("all");
+  const [siteFilter, setSiteFilterRaw] = useState<string>("all");
+  const [query, setQueryRaw] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
     key: "totalQty",
     dir: "desc",
   });
   const [page, setPage] = useState(1);
   const pageSize = 50;
+
+  // 篩選條件變更時同步重置分頁到第 1 頁
+  const setStatusFilter = useCallback((v: "all" | StockStatus) => {
+    setStatusFilterRaw(v);
+    setPage(1);
+  }, []);
+  const setSiteFilter = useCallback((v: string) => {
+    setSiteFilterRaw(v);
+    setPage(1);
+  }, []);
+  const setQuery = useCallback((v: string) => {
+    setQueryRaw(v);
+    setPage(1);
+  }, []);
 
   // Derive the list of sites for the filter dropdown
   const sites = useMemo(() => {
@@ -391,13 +405,9 @@ function TableBlock({
   const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
   const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter, siteFilter, query, sort]);
-
   const onSort = (key: SortKey) => {
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }));
+    setPage(1);
   };
 
   return (
