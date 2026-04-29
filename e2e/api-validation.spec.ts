@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 const API = process.env.E2E_API_URL ?? "http://localhost:5000";
-const SALES_FILE = path.resolve(__dirname, "../../data/2026_01_01_2026_04_e.g電線.xlsx");
+const SALES_FILE = path.resolve(__dirname, "fixtures/test-sales.xlsx");
 
 test.describe("API Validation — Backend Calculation Correctness", () => {
   let salesFileId: string;
@@ -14,7 +14,7 @@ test.describe("API Validation — Backend Calculation Correctness", () => {
     const resp = await request.post(`${API}/api/upload/sales`, {
       multipart: {
         file: {
-          name: "2026_01_01_2026_04_e.g電線.xlsx",
+          name: "test-sales.xlsx",
           mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           buffer: fileBuffer,
         },
