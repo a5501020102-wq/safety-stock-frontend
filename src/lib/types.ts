@@ -62,6 +62,7 @@ export interface SkuResult {
   suggestedOrder?: number;
   firstShortageMonth?: string | null;
   orderDeadline?: string | null;
+  turnoverRate?: number | null;
 }
 
 export interface ExcludedSku {

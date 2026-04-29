@@ -409,7 +409,7 @@ function TableBlock({
   const start = (currentPage - 1) * pageSize;
   const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
   const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
-  const planExtraCols = hasPlanData ? 3 : 0;
+  const planExtraCols = hasPlanData ? 4 : 0;
   const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const onSort = (key: SortKey) => {
@@ -491,6 +491,9 @@ function TableBlock({
                   </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
                     Shortage
+                  </HeaderCell>
+                  <HeaderCell sortKey={null} align="right">
+                    Turnover
                   </HeaderCell>
                 </>
               ) : null}
@@ -605,7 +608,7 @@ function ExpandableResultRow({
 }) {
   const { parameters } = useWorkflow();
   const [expanded, setExpanded] = useState(false);
-  const planExtraCols = hasPlanData ? 3 : 0;
+  const planExtraCols = hasPlanData ? 4 : 0;
   const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const gran = parameters.granularity ?? "monthly";
@@ -654,6 +657,7 @@ function ExpandableResultRow({
             <Cell align="right">
               <span className="font-mono text-xs text-muted-foreground">{row.firstShortageMonth ?? "—"}</span>
             </Cell>
+            <NumericCell value={row.turnoverRate ?? null} decimals={2} />
           </>
         ) : null}
       </tr>
