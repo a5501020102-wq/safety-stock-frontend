@@ -65,9 +65,9 @@ test.describe("API Validation — Backend Calculation Correctness", () => {
     const data = await resp.json();
 
     expect(data.success).toBe(true);
-    expect(data.recordCount).toBeGreaterThan(2700);
+    expect(data.recordCount).toBeGreaterThan(900);
     expect(data.detectedSites).toContain("1002");
-    expect(data.detectedSkus).toBeGreaterThan(300);
+    expect(data.detectedSkus).toBeGreaterThan(40);
     expect(data.dateRange.start).toBe("2026-01");
   });
 

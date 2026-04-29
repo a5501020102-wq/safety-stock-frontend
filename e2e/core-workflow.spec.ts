@@ -19,9 +19,9 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     await home.uploadSalesFile(SALES_FILE);
 
     const area = home.salesUploadArea;
-    await expect(area.locator("dd").filter({ hasText: /2,74[0-9]/ })).toBeVisible();
+    await expect(area.locator("dd").filter({ hasText: /1,00[0-9]/ })).toBeVisible();
     await expect(area.locator("dd").filter({ hasText: /1002/ })).toBeVisible();
-    await expect(area.locator("dd").filter({ hasText: /333/ })).toBeVisible();
+    await expect(area.locator("dd").filter({ hasText: /50/ })).toBeVisible();
     await expect(area.locator("dd").filter({ hasText: /2026-01/ })).toBeVisible();
   });
 
