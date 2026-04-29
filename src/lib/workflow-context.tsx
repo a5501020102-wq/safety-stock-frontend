@@ -129,19 +129,25 @@ function clearPersisted() {
 // ---------------------------------------------------------------------------
 
 export function WorkflowProvider({ children }: { children: React.ReactNode }) {
-  // 從 localStorage 恢復上次的上傳資料和參數（lazy initializer，首次渲染就拿到正確值）
-  // calculationResult 不恢復 — 使用者重新整理後需重新計算
-  const [uploads, setUploads] = useState<WorkflowState["uploads"]>(() => {
-    const persisted = loadPersisted();
-    return persisted.uploads ?? INITIAL_STATE.uploads;
-  });
-  const [parameters, setParametersState] = useState<CalculateRequestParams>(() => {
-    const persisted = loadPersisted();
-    return persisted.parameters ? { ...DEFAULT_PARAMETERS, ...persisted.parameters } : DEFAULT_PARAMETERS;
-  });
+  const [uploads, setUploads] = useState<WorkflowState["uploads"]>(INITIAL_STATE.uploads);
+  const [parameters, setParametersState] = useState<CalculateRequestParams>(DEFAULT_PARAMETERS);
   const [calculationResult, setCalculationResult] = useState<CalculationResponse | null>(null);
   const [isCalculating, setCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
+
+  // Hydrate from localStorage on mount (client-only).
+  // calculationResult is NOT restored — user must re-calculate after refresh.
+  // SSR 必須用 useEffect 延遲讀取 localStorage，
+  // 因為 server 端沒有 localStorage，useState lazy init 會造成 hydration mismatch (React #418)
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const persisted = loadPersisted();
+    if (persisted.uploads) setUploads(persisted.uploads);
+    if (persisted.parameters) {
+      setParametersState({ ...DEFAULT_PARAMETERS, ...persisted.parameters });
+    }
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Persist on changes (uploads + parameters only).
   useEffect(() => {
