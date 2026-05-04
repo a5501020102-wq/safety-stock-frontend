@@ -65,6 +65,10 @@ export interface SkuResult {
   turnoverRate?: number | null;
   coverageDays?: number | null;
   monthlyPlan?: MonthlyPlanResult[];
+
+  // 週模式日數據統計
+  dataPointCount?: number;
+  dataPointWarning?: string | null;
 }
 
 export interface MonthlyPlanResult {
@@ -161,6 +165,7 @@ export interface UploadSalesResponse extends UploadBase {
   skippedDateCount: number;
   hasPriceData: boolean;
   hasStockData: boolean;
+  availableWeeks: string[];
 }
 
 export interface UploadPriceResponse extends UploadBase {
@@ -198,6 +203,7 @@ export interface CalculateRequestParams {
   groupLeadTimes?: Record<string, number>;
   trendMode?: "short" | "yoy" | "none";
   workingDaysPerMonth?: number | null;
+  selectedWeeks?: string[];
 }
 
 export interface MaterialCategory {

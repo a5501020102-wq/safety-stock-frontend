@@ -708,6 +708,13 @@ function DemandDetail({ row }: { row: SkuResult }) {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Data point warning (weekly mode) */}
+      {row.dataPointWarning ? (
+        <div className="text-xs text-muted-foreground border-l-2 border-foreground/20 pl-3 py-1">
+          {row.dataPointWarning}
+        </div>
+      ) : null}
+
       {/* Row 1: demand bar chart + summary stats */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
         {/* Left: demand bar chart */}

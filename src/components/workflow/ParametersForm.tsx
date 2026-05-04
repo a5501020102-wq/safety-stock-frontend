@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { cn } from "@/lib/cn";
 import { api } from "@/lib/api";
 import { useWorkflow } from "@/lib/workflow-context";
-import type { CalcMode, Granularity, MaterialCategory } from "@/lib/types";
+import type { CalcMode, CalculateRequestParams, Granularity, MaterialCategory } from "@/lib/types";
 
 /**
  * ParametersForm
@@ -185,7 +185,15 @@ export function ParametersForm() {
                 name="granularity"
                 value={g.value}
                 checked={(parameters.granularity ?? "monthly") === g.value}
-                onChange={() => set({ granularity: g.value })}
+                onChange={() => {
+                  const patch: Partial<CalculateRequestParams> = { granularity: g.value };
+                  // 切到 weekly 時，自動填入全部可用週
+                  if (g.value === "weekly") {
+                    const weeks = (uploads.sales as { availableWeeks?: string[] } | null)?.availableWeeks ?? [];
+                    if (weeks.length > 0) patch.selectedWeeks = [...weeks];
+                  }
+                  set(patch);
+                }}
                 label={g.label}
                 deck={g.deck}
               />
@@ -252,6 +260,15 @@ export function ParametersForm() {
             ) : null}
           </div>
         </Group>
+
+        {/* --- Week range selector (weekly mode only) --- */}
+        {parameters.granularity === "weekly" ? (
+          <WeekRangeSelector
+            availableWeeks={(uploads.sales as { availableWeeks?: string[] } | null)?.availableWeeks ?? []}
+            selectedWeeks={parameters.selectedWeeks}
+            onChange={(weeks) => set({ selectedWeeks: weeks })}
+          />
+        ) : null}
 
         <Divider />
 
@@ -825,5 +842,109 @@ function summarizePolicy(p: ReturnType<typeof useWorkflow>["parameters"]): strin
   return (
     `${modeLabel} · ${gran} · LT ${p.leadTime ?? 30}d · min ${p.minMonths ?? 2}m · ` +
     `Z(${z.A}/${z.B}/${z.C}) · ${months}/12 months${dateRange}${ma}${outlier}.`
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Week range selector (weekly mode)
+// ---------------------------------------------------------------------------
+
+function WeekRangeSelector({
+  availableWeeks,
+  selectedWeeks,
+  onChange,
+}: {
+  availableWeeks: string[];
+  selectedWeeks?: string[];
+  onChange: (weeks: string[]) => void;
+}) {
+  if (availableWeeks.length === 0) {
+    return (
+      <div className="mt-4 text-sm text-muted-foreground font-serif italic">
+        Upload sales data to see available weeks.
+      </div>
+    );
+  }
+
+  const fromWeek = selectedWeeks?.[0] ?? availableWeeks[0];
+  const toWeek = selectedWeeks?.[selectedWeeks.length - 1] ?? availableWeeks[availableWeeks.length - 1];
+
+  const setRange = (from: string, to: string) => {
+    const fromIdx = availableWeeks.indexOf(from);
+    const toIdx = availableWeeks.indexOf(to);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const start = Math.min(fromIdx, toIdx);
+    const end = Math.max(fromIdx, toIdx);
+    onChange(availableWeeks.slice(start, end + 1));
+  };
+
+  const presets = [
+    { label: "Last 4w", count: 4 },
+    { label: "Last 8w", count: 8 },
+    { label: "Last 12w", count: 12 },
+    { label: "All", count: availableWeeks.length },
+  ];
+
+  const weekCount = selectedWeeks?.length ?? availableWeeks.length;
+
+  return (
+    <div className="mt-4 flex flex-col gap-4">
+      <div className="flex items-baseline gap-3">
+        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Week range</span>
+        <span className="font-mono text-xs text-muted-foreground tabular-nums">
+          {weekCount} weeks ({weekCount * 7} days)
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">From</span>
+          <select
+            className="border-b border-foreground/20 bg-transparent py-1 px-2 font-mono text-xs focus:outline-none focus:border-foreground"
+            value={fromWeek}
+            onChange={(e) => setRange(e.target.value, toWeek)}
+          >
+            {availableWeeks.map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">To</span>
+          <select
+            className="border-b border-foreground/20 bg-transparent py-1 px-2 font-mono text-xs focus:outline-none focus:border-foreground"
+            value={toWeek}
+            onChange={(e) => setRange(fromWeek, e.target.value)}
+          >
+            {availableWeeks.map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-center gap-2">
+          {presets.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              className={cn(
+                "px-2 py-0.5 text-[10px] uppercase tracking-wider border transition-colors",
+                weekCount === p.count
+                  ? "border-foreground text-foreground"
+                  : "border-foreground/20 text-muted-foreground hover:border-foreground/40"
+              )}
+              onClick={() => {
+                const start = Math.max(0, availableWeeks.length - p.count);
+                onChange(availableWeeks.slice(start));
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
