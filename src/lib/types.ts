@@ -136,6 +136,8 @@ export interface ParametersSnapshot {
   enableMa: boolean;
   maWindow: number | null;
   granularity: Granularity;
+  selectedWeeks?: string[];
+  workingDaysPerMonth?: number | null;
   engineVersion: string;
   salesFilename: string | null;
   priceFilename: string | null;
@@ -266,6 +268,8 @@ export interface ExcelExportRequest {
   mode: CalcMode;
   siteFilter?: string | null;
   granularity?: Granularity;
+  selectedWeeks?: string[];
+  calcParams?: Record<string, unknown>;
   summary?: CalculationSummary;
   results?: SkuResult[];
   comparison?: ComparisonStats;

@@ -89,11 +89,15 @@ function ExportBar({ result }: { result: CalculationResponse }) {
     try {
       let resp: { blob: Blob; filename: string };
       const siteFilter = sapSite !== "all" ? sapSite : undefined;
+      const selectedWeeks = result.parameters?.selectedWeeks as string[] | undefined;
+      const calcParams = result.parameters ? { ...result.parameters } : undefined;
       if (result.mode === "compare") {
         resp = await api.exportExcel({
           mode: "compare",
           siteFilter,
           granularity,
+          selectedWeeks,
+          calcParams,
           allSummary: { summary: result.allSummary.summary, results: result.allSummary.results },
           totalSummary: { summary: result.totalSummary.summary, results: result.totalSummary.results },
           comparison: result.comparison,
@@ -103,6 +107,8 @@ function ExportBar({ result }: { result: CalculationResponse }) {
           mode: result.mode,
           siteFilter,
           granularity,
+          selectedWeeks,
+          calcParams,
           summary: "summary" in result ? result.summary : undefined,
           results: "results" in result ? result.results : undefined,
         });
