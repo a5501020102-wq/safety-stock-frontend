@@ -63,6 +63,19 @@ export interface SkuResult {
   firstShortageMonth?: string | null;
   orderDeadline?: string | null;
   turnoverRate?: number | null;
+  coverageDays?: number | null;
+  monthlyPlan?: MonthlyPlanResult[];
+}
+
+export interface MonthlyPlanResult {
+  month: string;
+  demand: number;
+  supply: number;
+  transferIn: number;
+  transferOut: number;
+  independentDemand: number;
+  netChange: number;
+  endingStock: number;
 }
 
 export interface ExcludedSku {

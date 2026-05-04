@@ -262,7 +262,9 @@ type SortKey =
   | "maxInventory"
   | "trendPct"
   | "planStock"
-  | "suggestedOrder";
+  | "suggestedOrder"
+  | "coverageDays"
+  | "gap";
 type SortDir = "asc" | "desc";
 
 const STATUS_FILTERS: Array<{
@@ -360,6 +362,8 @@ function TableBlock({
     const getSortValue = (r: SkuResult, key: SortKey): number | string | null => {
       if (key === "dailyDemand") return r.meanDemand > 0 ? r.meanDemand / dpp : 0;
       if (key === "trendPct") return r.trendPct ?? null;
+      if (key === "coverageDays") return r.coverageDays ?? null;
+      if (key === "gap") return r.gap ?? null;
       return r[key] as number | string;
     };
 
@@ -409,7 +413,7 @@ function TableBlock({
   const start = (currentPage - 1) * pageSize;
   const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
   const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
-  const planExtraCols = hasPlanData ? 4 : 0;
+  const planExtraCols = hasPlanData ? 7 : 0;
   const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const onSort = (key: SortKey) => {
@@ -486,11 +490,20 @@ function TableBlock({
                   <HeaderCell sortKey="planStock" sort={sort} onSort={onSort} align="right">
                     Stock
                   </HeaderCell>
+                  <HeaderCell sortKey="coverageDays" sort={sort} onSort={onSort} align="right">
+                    Coverage
+                  </HeaderCell>
                   <HeaderCell sortKey="suggestedOrder" sort={sort} onSort={onSort} align="right">
                     Order
                   </HeaderCell>
+                  <HeaderCell sortKey="gap" sort={sort} onSort={onSort} align="right">
+                    Gap
+                  </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
                     Shortage
+                  </HeaderCell>
+                  <HeaderCell sortKey={null} align="right">
+                    Deadline
                   </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
                     Turnover
@@ -608,7 +621,7 @@ function ExpandableResultRow({
 }) {
   const { parameters } = useWorkflow();
   const [expanded, setExpanded] = useState(false);
-  const planExtraCols = hasPlanData ? 4 : 0;
+  const planExtraCols = hasPlanData ? 7 : 0;
   const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
 
   const gran = parameters.granularity ?? "monthly";
@@ -653,9 +666,14 @@ function ExpandableResultRow({
         {hasPlanData ? (
           <>
             <NumericCell value={row.planStock ?? null} decimals={0} />
+            <NumericCell value={row.coverageDays ?? null} decimals={1} />
             <NumericCell value={row.suggestedOrder ?? null} decimals={0} />
+            <NumericCell value={row.gap ?? null} decimals={0} />
             <Cell align="right">
               <span className="font-mono text-xs text-muted-foreground">{row.firstShortageMonth ?? "—"}</span>
+            </Cell>
+            <Cell align="right">
+              <span className="font-mono text-xs text-muted-foreground">{row.orderDeadline ?? "—"}</span>
             </Cell>
             <NumericCell value={row.turnoverRate ?? null} decimals={2} />
           </>
@@ -685,67 +703,175 @@ function DemandDetail({ row }: { row: SkuResult }) {
   const mean = row.meanDemand;
   const ss = row.safetyStock;
   const maxVal = Math.max(...values, 1);
+  const plan = row.monthlyPlan;
+  const hasPlanDetail = plan && plan.length > 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
-      {/* Left: demand bar chart */}
-      <div>
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Demand by period
-        </span>
-        <div className="mt-3 flex items-end gap-[2px] h-16">
-          {values.map((v, i) => {
-            const h = Math.max(2, Math.round((v / maxVal) * 56));
-            const bg =
-              v <= 0
-                ? "bg-[color:var(--color-shortage)]/20"
-                : v >= mean
-                  ? "bg-[color:var(--color-healthy)]/30"
-                  : "bg-[color:var(--color-accent)]/30";
-            return (
-              <div
+    <div className="flex flex-col gap-8">
+      {/* Row 1: demand bar chart + summary stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
+        {/* Left: demand bar chart */}
+        <div>
+          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            Demand by period
+          </span>
+          <div className="mt-3 flex items-end gap-[2px] h-16">
+            {values.map((v, i) => {
+              const h = Math.max(2, Math.round((v / maxVal) * 56));
+              const bg =
+                v <= 0
+                  ? "bg-[color:var(--color-shortage)]/20"
+                  : v >= mean
+                    ? "bg-[color:var(--color-healthy)]/30"
+                    : "bg-[color:var(--color-accent)]/30";
+              return (
+                <div
+                  key={i}
+                  className={cn("flex-1 min-w-[6px] max-w-[28px]", bg)}
+                  style={{ height: `${h}px` }}
+                  title={`P${i + 1}: ${formatNumber(v, 0)}`}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-1 flex gap-[2px]">
+            {values.map((v, i) => (
+              <span
                 key={i}
-                className={cn("flex-1 min-w-[6px] max-w-[28px]", bg)}
-                style={{ height: `${h}px` }}
-                title={`P${i + 1}: ${formatNumber(v, 0)}`}
-              />
-            );
-          })}
+                className="flex-1 min-w-[6px] max-w-[28px] text-center font-mono text-[8px] text-muted-foreground/50 tabular-nums truncate"
+              >
+                {v > 0 ? formatNumber(v, 0) : "0"}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="mt-1 flex gap-[2px]">
-          {values.map((v, i) => (
-            <span
-              key={i}
-              className="flex-1 min-w-[6px] max-w-[28px] text-center font-mono text-[8px] text-muted-foreground/50 tabular-nums truncate"
-            >
-              {v > 0 ? formatNumber(v, 0) : "0"}
-            </span>
-          ))}
+
+        {/* Right: summary stats */}
+        <div className="flex flex-col gap-3 min-w-[180px]">
+          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Summary</span>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
+            <span className="text-muted-foreground">Mean</span>
+            <span className="text-right tabular-nums">{formatNumber(mean, 0)}</span>
+            <span className="text-muted-foreground">Std Dev</span>
+            <span className="text-right tabular-nums">{formatNumber(row.stdDev, 0)}</span>
+            <span className="text-muted-foreground">CV</span>
+            <span className="text-right tabular-nums">{formatNumber(row.cv, 2)}</span>
+            <span className="text-muted-foreground">Safety Stock</span>
+            <span className="text-right tabular-nums font-medium">{formatNumber(ss, 0)}</span>
+            <span className="text-muted-foreground">ROP</span>
+            <span className="text-right tabular-nums">{formatNumber(row.reorderPoint, 0)}</span>
+            <span className="text-muted-foreground">Max</span>
+            <span className="text-right tabular-nums">{formatNumber(row.maxInventory, 0)}</span>
+            <span className="text-muted-foreground">Periods</span>
+            <span className="text-right tabular-nums">{values.length}</span>
+            <span className="text-muted-foreground">Active</span>
+            <span className="text-right tabular-nums">{values.filter((v) => v > 0).length}</span>
+          </div>
         </div>
       </div>
 
-      {/* Right: summary stats */}
-      <div className="flex flex-col gap-3 min-w-[180px]">
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Summary</span>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
-          <span className="text-muted-foreground">Mean</span>
-          <span className="text-right tabular-nums">{formatNumber(mean, 0)}</span>
-          <span className="text-muted-foreground">Std Dev</span>
-          <span className="text-right tabular-nums">{formatNumber(row.stdDev, 0)}</span>
-          <span className="text-muted-foreground">CV</span>
-          <span className="text-right tabular-nums">{formatNumber(row.cv, 2)}</span>
-          <span className="text-muted-foreground">Safety Stock</span>
-          <span className="text-right tabular-nums font-medium">{formatNumber(ss, 0)}</span>
-          <span className="text-muted-foreground">ROP</span>
-          <span className="text-right tabular-nums">{formatNumber(row.reorderPoint, 0)}</span>
-          <span className="text-muted-foreground">Max</span>
-          <span className="text-right tabular-nums">{formatNumber(row.maxInventory, 0)}</span>
-          <span className="text-muted-foreground">Periods</span>
-          <span className="text-right tabular-nums">{values.length}</span>
-          <span className="text-muted-foreground">Active</span>
-          <span className="text-right tabular-nums">{values.filter((v) => v > 0).length}</span>
+      {/* Row 2: monthly stock projection (only when plan data exists) */}
+      {hasPlanDetail ? (
+        <div>
+          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            Stock projection
+          </span>
+          <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
+            {/* Left: projection table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-foreground/10">
+                    <th className="py-1.5 pr-4 text-left text-muted-foreground font-normal">Month</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Demand</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Supply</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Trfr In</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Trfr Out</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Net</th>
+                    <th className="py-1.5 pl-3 text-right font-normal">Ending</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-foreground/5">
+                    <td className="py-1.5 pr-4 text-muted-foreground">Current</td>
+                    <td colSpan={5}></td>
+                    <td className="py-1.5 pl-3 text-right tabular-nums font-medium">
+                      {formatNumber(row.planStock ?? 0, 0)}
+                    </td>
+                  </tr>
+                  {plan.map((mp) => {
+                    const isShortage = mp.endingStock < ss;
+                    const monthLabel = `${mp.month.slice(0, 4)}/${mp.month.slice(4)}`;
+                    return (
+                      <tr
+                        key={mp.month}
+                        className={cn(
+                          "border-b border-foreground/5",
+                          isShortage && "text-[color:var(--color-shortage)]"
+                        )}
+                      >
+                        <td className="py-1.5 pr-4">{monthLabel}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">
+                          {mp.demand > 0 ? formatNumber(mp.demand, 0) : "—"}
+                        </td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">
+                          {mp.supply > 0 ? formatNumber(mp.supply, 0) : "—"}
+                        </td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">
+                          {mp.transferIn > 0 ? formatNumber(mp.transferIn, 0) : "—"}
+                        </td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">
+                          {mp.transferOut > 0 ? formatNumber(mp.transferOut, 0) : "—"}
+                        </td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">{formatNumber(mp.netChange, 0)}</td>
+                        <td
+                          className={cn(
+                            "py-1.5 pl-3 text-right tabular-nums",
+                            isShortage ? "font-bold" : "font-medium"
+                          )}
+                        >
+                          {formatNumber(mp.endingStock, 0)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Right: plan summary */}
+            <div className="flex flex-col gap-3 min-w-[180px]">
+              <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                Plan summary
+              </span>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
+                <span className="text-muted-foreground">Current Stock</span>
+                <span className="text-right tabular-nums">{formatNumber(row.planStock ?? 0, 0)}</span>
+                <span className="text-muted-foreground">Final Stock</span>
+                <span className="text-right tabular-nums">{formatNumber(row.finalStock ?? 0, 0)}</span>
+                <span className="text-muted-foreground">Min Stock</span>
+                <span className="text-right tabular-nums">{formatNumber(row.minStock ?? 0, 0)}</span>
+                {row.minStockMonth ? (
+                  <>
+                    <span className="text-muted-foreground">Min Month</span>
+                    <span className="text-right tabular-nums">{`${row.minStockMonth.slice(0, 4)}/${row.minStockMonth.slice(4)}`}</span>
+                  </>
+                ) : null}
+                <span className="text-muted-foreground">Coverage</span>
+                <span className="text-right tabular-nums">
+                  {row.coverageDays != null ? `${formatNumber(row.coverageDays, 1)}d` : "—"}
+                </span>
+                <span className="text-muted-foreground">Gap</span>
+                <span
+                  className={cn("text-right tabular-nums", (row.gap ?? 0) < 0 && "text-[color:var(--color-shortage)]")}
+                >
+                  {row.gap != null ? formatNumber(row.gap, 0) : "—"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
