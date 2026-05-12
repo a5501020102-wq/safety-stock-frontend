@@ -9,62 +9,52 @@ import type { CalcMode, CalculateRequestParams, Granularity, MaterialCategory } 
 /**
  * ParametersForm
  * ---------------------------------------------------------------------------
- * Section 02 · Configuration. All inputs bind two-way to WorkflowContext.
- *
- * Editorial layout: 12-column asymmetric grid.
- *   Strategy column (lg col-span-7) on the left
- *   Months column   (lg col-span-5) on the right
- *
- * Visual rules (from design spec):
- *   - 0 radius everywhere
- *   - Inputs use bottom-border only, italic placeholder
- *   - Toggles & radios are minimal; gold = active
- *   - Generous spacing between groups; thin dividers
+ * Section 02 · 參數設定。所有輸入都會同步到 WorkflowContext。
  */
 export function ParametersForm() {
   const { parameters, setParameters, uploads } = useWorkflow();
 
   const set = setParameters;
 
-  // ----- Calc mode -----------------------------------------------------------
+  // ----- 計算模式 -----------------------------------------------------------
   const calcModes: { value: CalcMode; label: string; deck: string }[] = [
     {
       value: "compare",
-      label: "Compare",
-      deck: "Run both split and consolidated; show inventory savings.",
+      label: "對比",
+      deck: "同時計算分倉與總倉，顯示庫存節省量。",
     },
     {
       value: "all",
-      label: "Split",
-      deck: "Each shipping site computed independently.",
+      label: "分倉",
+      deck: "每個出貨點獨立計算。",
     },
     {
       value: "total",
-      label: "Consolidated",
-      deck: "All sites pooled into a single virtual warehouse.",
+      label: "總倉",
+      deck: "所有出貨點合併為一個虛擬總倉。",
     },
   ];
 
-  // ----- Granularity options ---------------------------------------------------
+  // ----- 彙總粒度 -----------------------------------------------------------
   const granularityOptions: { value: Granularity; label: string; deck: string }[] = [
     {
       value: "monthly",
-      label: "Monthly",
-      deck: "Standard period — one data point per calendar month.",
+      label: "月",
+      deck: "標準週期，每個日曆月一筆需求資料。",
     },
     {
       value: "weekly",
-      label: "Weekly",
-      deck: "ISO weeks — finer resolution for fast-moving items.",
+      label: "週",
+      deck: "使用 ISO 週，適合需要較細需求分析的品項。",
     },
     {
       value: "daily",
-      label: "Daily",
-      deck: "Maximum granularity — best for very short lead times.",
+      label: "日",
+      deck: "使用日粒度，適合前置期較短的品項。",
     },
   ];
 
-  // ----- Z-score options per ABC class ---------------------------------------
+  // ----- ABC Z-score 選項 ---------------------------------------------------
   const zScoreOptions: Record<"A" | "B" | "C", { value: number; label: string }[]> = {
     A: [
       { value: 1.65, label: "95% (1.65)" },
@@ -84,18 +74,18 @@ export function ParametersForm() {
   };
 
   const months = [
-    [1, "Jan"],
-    [2, "Feb"],
-    [3, "Mar"],
-    [4, "Apr"],
-    [5, "May"],
-    [6, "Jun"],
-    [7, "Jul"],
-    [8, "Aug"],
-    [9, "Sep"],
-    [10, "Oct"],
-    [11, "Nov"],
-    [12, "Dec"],
+    [1, "一月"],
+    [2, "二月"],
+    [3, "三月"],
+    [4, "四月"],
+    [5, "五月"],
+    [6, "六月"],
+    [7, "七月"],
+    [8, "八月"],
+    [9, "九月"],
+    [10, "十月"],
+    [11, "十一月"],
+    [12, "十二月"],
   ] as const;
 
   const isMonthSelected = (m: number) => parameters.selectedMonths?.includes(m) ?? false;
@@ -110,14 +100,14 @@ export function ParametersForm() {
   const allMonths = () => set({ selectedMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] });
   const noMonths = () => set({ selectedMonths: [] });
 
-  // ----- Date range (from uploaded data) ------------------------------------
+  // ----- 日期範圍 -----------------------------------------------------------
   const dataDateRange = {
     min: (uploads.sales as { dateRange?: { start?: string } } | null)?.dateRange?.start ?? "",
     max: (uploads.sales as { dateRange?: { end?: string } } | null)?.dateRange?.end ?? "",
   };
   const [seasonalOpen, setSeasonalOpen] = useState(false);
 
-  // ----- Category lead times (Advanced) ------------------------------------
+  // ----- 分類前置期 ---------------------------------------------------------
   const [materialCategories, setMaterialCategories] = useState<Record<string, MaterialCategory>>({});
   const [masterAvailable, setMasterAvailable] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -150,15 +140,12 @@ export function ParametersForm() {
     }
   };
 
-  // -------------------------------------------------------------------------
   return (
-    <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-      {/* ============================================================
-          Left column · Strategy (7/12)
-          ============================================================ */}
-      <div className="lg:col-span-7 flex flex-col gap-12">
-        {/* --- Calc mode --- */}
-        <Group label="Calculation mode" deck="Three lenses on the same data.">
+    <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+      {/* 左欄：計算策略 */}
+      <div className="flex flex-col gap-10 lg:col-span-7">
+        {/* 計算模式 */}
+        <Group label="計算模式" deck="同一份資料的三種計算視角。">
           <div className="flex flex-col">
             {calcModes.map((m) => (
               <RadioRow
@@ -176,8 +163,8 @@ export function ParametersForm() {
 
         <Divider />
 
-        {/* --- Aggregation granularity --- */}
-        <Group label="Aggregation" deck="Time-period granularity for demand analysis.">
+        {/* 彙總粒度 */}
+        <Group label="彙總粒度" deck="設定需求分析的時間粒度。">
           <div className="flex flex-col">
             {granularityOptions.map((g) => (
               <RadioRow
@@ -187,11 +174,12 @@ export function ParametersForm() {
                 checked={(parameters.granularity ?? "monthly") === g.value}
                 onChange={() => {
                   const patch: Partial<CalculateRequestParams> = { granularity: g.value };
-                  // 切到 weekly 時，自動填入全部可用週
+
                   if (g.value === "weekly") {
                     const weeks = (uploads.sales as { availableWeeks?: string[] } | null)?.availableWeeks ?? [];
                     if (weeks.length > 0) patch.selectedWeeks = [...weeks];
                   }
+
                   set(patch);
                 }}
                 label={g.label}
@@ -203,9 +191,9 @@ export function ParametersForm() {
 
         <Divider />
 
-        {/* --- ABC service levels --- */}
-        <Group label="Service level (ABC)" deck="Differentiated Z-scores by ABC tier. Higher = more cushion.">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-6">
+        {/* ABC 服務水準 */}
+        <Group label="ABC 服務水準" deck="依 ABC 分級設定不同 Z 值，數值越高安全庫存越多。">
+          <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-3">
             {(["A", "B", "C"] as const).map((tier) => (
               <UnderlineSelect
                 key={tier}
@@ -229,20 +217,20 @@ export function ParametersForm() {
 
         <Divider />
 
-        {/* --- Numeric inputs --- */}
-        <Group label="Time" deck="Days from order to delivery; minimum months of data required to compute.">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* 時間參數 */}
+        <Group label="時間參數" deck="設定前置期與納入計算所需的最少資料期數。">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <UnderlineNumber
-              label="Lead time"
-              suffix="days"
+              label="前置期"
+              suffix="天"
               value={parameters.leadTime ?? 30}
               min={1}
               max={365}
               onChange={(v) => set({ leadTime: v })}
             />
             <UnderlineNumber
-              label={parameters.granularity === "monthly" ? "Minimum months" : "Minimum periods"}
-              suffix={parameters.granularity === "monthly" ? "months of data" : "active periods"}
+              label={parameters.granularity === "monthly" ? "最少月份" : "最少期數"}
+              suffix={parameters.granularity === "monthly" ? "個月資料" : "有效期數"}
               value={parameters.minMonths ?? 2}
               min={0}
               max={12}
@@ -250,8 +238,8 @@ export function ParametersForm() {
             />
             {parameters.granularity === "monthly" ? (
               <UnderlineNumber
-                label="Working days / month"
-                suffix="days"
+                label="每月工作天"
+                suffix="天"
                 value={parameters.workingDaysPerMonth ?? 30}
                 min={1}
                 max={31}
@@ -261,7 +249,7 @@ export function ParametersForm() {
           </div>
         </Group>
 
-        {/* --- Week range selector (weekly mode only) --- */}
+        {/* 週別範圍，只在 weekly 模式顯示 */}
         {parameters.granularity === "weekly" ? (
           <WeekRangeSelector
             availableWeeks={(uploads.sales as { availableWeeks?: string[] } | null)?.availableWeeks ?? []}
@@ -272,27 +260,25 @@ export function ParametersForm() {
 
         <Divider />
 
-        {/* --- Toggles --- */}
-        <Group label="Refinements" deck="Statistical filters applied before computing safety stock.">
+        {/* 統計處理 */}
+        <Group label="統計處理" deck="計算安全庫存前套用的統計過濾方式。">
           <div className="flex flex-col gap-6">
             <ToggleRow
-              label="MAD outlier detection"
-              deck="Removes extreme months using median absolute deviation."
+              label="MAD 離群值偵測"
+              deck="使用中位數絕對偏差排除異常期間。"
               checked={parameters.enableOutlier ?? true}
               onChange={(c) => set({ enableOutlier: c })}
             />
             <ToggleRow
-              label="Moving average"
-              deck="Smooths month-to-month noise with a rolling window."
+              label="移動平均"
+              deck="使用滾動視窗平滑期間之間的需求波動。"
               checked={parameters.enableMa ?? false}
               onChange={(c) => set({ enableMa: c })}
             />
-            {/* MA window slider — appears only when MA is enabled */}
+
             {parameters.enableMa ? (
-              <div className="pl-8 border-l border-foreground/15 ml-2">
-                <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  Window
-                </span>
+              <div className="ml-2 border-l border-foreground/15 pl-8">
+                <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">視窗</span>
                 <div className="mt-3 flex items-center gap-6">
                   <input
                     type="range"
@@ -302,12 +288,12 @@ export function ParametersForm() {
                     value={parameters.maWindow ?? 3}
                     onChange={(e) => set({ maWindow: Number(e.target.value) })}
                     className="flex-1 accent-[color:var(--color-accent)]"
-                    aria-label="Moving average window"
+                    aria-label="移動平均視窗"
                   />
-                  <span className="font-mono text-base tabular-nums text-foreground w-20 text-right">
+                  <span className="w-20 text-right font-mono text-base tabular-nums text-foreground">
                     {parameters.maWindow ?? 3}{" "}
-                    <span className="text-muted-foreground text-xs">
-                      {parameters.granularity === "weekly" ? "wk" : parameters.granularity === "daily" ? "d" : "mo"}
+                    <span className="text-xs text-muted-foreground">
+                      {parameters.granularity === "weekly" ? "週" : parameters.granularity === "daily" ? "天" : "月"}
                     </span>
                   </span>
                 </div>
@@ -318,14 +304,14 @@ export function ParametersForm() {
 
         <Divider />
 
-        {/* --- Trend detection --- */}
-        <Group label="Trend" deck="Show demand trend percentage in results.">
+        {/* 趨勢偵測 */}
+        <Group label="趨勢" deck="在結果中顯示需求趨勢百分比。">
           <div className="flex flex-col">
             {(
               [
-                { value: "none", label: "None", deck: "Do not calculate trend." },
-                { value: "short", label: "Short-term", deck: "Compare first half vs second half of the data range." },
-                { value: "yoy", label: "YoY", deck: "Compare same months across the latest two years." },
+                { value: "none", label: "不計算", deck: "不計算需求趨勢。" },
+                { value: "short", label: "短期趨勢", deck: "比較資料前半段與後半段的需求變化。" },
+                { value: "yoy", label: "年度同期比", deck: "比較最近兩年相同月份的需求變化。" },
               ] as const
             ).map((opt) => (
               <RadioRow
@@ -342,49 +328,45 @@ export function ParametersForm() {
         </Group>
       </div>
 
-      {/* ============================================================
-          Right column · Date range + Seasonal filter (5/12)
-          ============================================================ */}
-      <div className="lg:col-span-5 flex flex-col gap-12">
-        {/* --- Date range --- */}
-        <Group label="Date range" deck="Calculate using data from this period. Auto-filled from uploaded data.">
+      {/* 右欄：日期範圍與季節性過濾 */}
+      <div className="flex flex-col gap-10 lg:col-span-5">
+        {/* 日期範圍 */}
+        <Group label="日期範圍" deck="使用此期間的資料進行計算。系統會依上傳資料自動帶入。">
           <div className="flex flex-col gap-4">
             <DateInput
-              label="From"
+              label="起"
               value={parameters.dateFrom ?? ""}
               placeholder={dataDateRange.min}
               onChange={(v) => set({ dateFrom: v || null })}
             />
             <DateInput
-              label="To"
+              label="迄"
               value={parameters.dateTo ?? ""}
               placeholder={dataDateRange.max}
               onChange={(v) => set({ dateTo: v || null })}
             />
-            <span className="font-sans text-[10px] text-muted-foreground/60">
-              Empty = use full range from uploaded data
-            </span>
+            <span className="font-sans text-[10px] text-muted-foreground/60">空白表示使用上傳資料的完整期間</span>
           </div>
         </Group>
 
         <Divider />
 
-        {/* --- Seasonal filter (collapsible) --- */}
+        {/* 季節性過濾 */}
         <div>
           <button
             type="button"
             onClick={() => setSeasonalOpen((p) => !p)}
-            className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+            className="border-b border-muted-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-muted-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
           >
-            {seasonalOpen ? "▵ Collapse" : "▿ Advanced"} · Seasonal filter
+            {seasonalOpen ? "▵ 收合" : "▿ 進階"} · 季節性過濾
           </button>
 
           {seasonalOpen ? (
             <div className="mt-6">
-              <p className="font-serif italic text-xs text-muted-foreground max-w-md">
-                Exclude specific months across all years. Only checked months are included.
+              <p className="max-w-md font-serif text-xs text-muted-foreground">
+                排除特定月份。只有勾選的月份會納入計算。
               </p>
-              <div className="mt-4 grid grid-cols-3 gap-y-3 gap-x-4">
+              <div className="mt-4 grid grid-cols-3 gap-x-4 gap-y-3">
                 {months.map(([num, name]) => (
                   <MonthCheckbox
                     key={num}
@@ -399,18 +381,18 @@ export function ParametersForm() {
                 <button
                   type="button"
                   onClick={allMonths}
-                  className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+                  className="border-b border-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
                 >
-                  Select all
+                  全選
                 </button>
                 <button
                   type="button"
                   onClick={noMonths}
-                  className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+                  className="border-b border-muted-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-muted-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
                 >
-                  Clear
+                  清除
                 </button>
-                <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
+                <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
                   {parameters.selectedMonths?.length ?? 0} / 12
                 </span>
               </div>
@@ -418,38 +400,31 @@ export function ParametersForm() {
           ) : null}
         </div>
 
-        {/* Policy preview */}
+        {/* 計算政策預覽 */}
         <div className="border-t border-foreground/15 pt-6">
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Policy preview
-          </span>
-          <p className="mt-3 font-serif italic text-base leading-relaxed text-foreground">
-            {summarizePolicy(parameters)}
-          </p>
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">計算政策預覽</span>
+          <p className="mt-3 font-serif text-base leading-relaxed text-foreground">{summarizePolicy(parameters)}</p>
         </div>
       </div>
 
-      {/* ============================================================
-          Full-width · Advanced category lead times (12/12)
-          ============================================================ */}
+      {/* 分類前置期 */}
       {masterAvailable ? (
-        <div className="lg:col-span-12 border-t border-foreground/10 pt-8">
+        <div className="border-t border-foreground/10 pt-8 lg:col-span-12">
           <button
             type="button"
             onClick={() => setAdvancedOpen((p) => !p)}
-            className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+            className="border-b border-muted-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-muted-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
           >
-            {advancedOpen ? "▵ Collapse" : "▿ Advanced"} · Category lead times
+            {advancedOpen ? "▵ 收合" : "▿ 進階"} · 分類前置期
           </button>
 
           {advancedOpen ? (
             <div className="mt-8">
-              <p className="font-serif italic text-sm text-muted-foreground max-w-xl">
-                Override the global lead time for specific product categories. Empty fields inherit the global value
-                above.
+              <p className="max-w-xl font-serif text-sm text-muted-foreground">
+                可針對特定產品分類覆寫全域前置期。空白欄位會沿用上方的全域設定。
               </p>
 
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
+              <div className="mt-6 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(materialCategories)
                   .sort(([, a], [, b]) => b.totalCount - a.totalCount)
                   .map(([catId, cat]) => (
@@ -469,9 +444,9 @@ export function ParametersForm() {
                 <button
                   type="button"
                   onClick={() => set({ categoryLeadTimes: {} })}
-                  className="font-sans text-[11px] uppercase tracking-[0.2em] text-muted-foreground border-b border-muted-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+                  className="border-b border-muted-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-muted-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
                 >
-                  Reset all to default
+                  全部重設為預設值
                 </button>
               </div>
             </div>
@@ -502,7 +477,7 @@ function DateInput({
 
   return (
     <div>
-      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+      <label htmlFor={id} className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
         {label}
       </label>
       <input
@@ -515,9 +490,9 @@ function DateInput({
           onChange(raw);
         }}
         className={cn(
-          "mt-2 w-full bg-transparent border-0 border-b py-2",
+          "mt-2 w-full border-0 border-b bg-transparent py-2",
           "font-mono text-sm tabular-nums",
-          "focus:outline-none transition-colors duration-500 ease-luxury",
+          "transition-colors duration-500 ease-luxury focus:outline-none",
           value
             ? "border-foreground text-foreground focus:border-accent"
             : "border-foreground/30 text-muted-foreground placeholder:italic focus:border-accent"
@@ -547,11 +522,11 @@ function CategoryLtInput({
 
   return (
     <div>
-      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+      <label htmlFor={id} className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
         {name}
       </label>
-      <span className="block mt-1 font-mono text-[10px] text-muted-foreground/60">
-        {catId} · {count.toLocaleString()} items
+      <span className="mt-1 block font-mono text-[10px] text-muted-foreground/60">
+        {catId} · {count.toLocaleString()} 個品項
       </span>
       <div className="mt-2 flex items-center gap-3">
         <input
@@ -571,18 +546,16 @@ function CategoryLtInput({
             }
           }}
           className={cn(
-            "w-20 bg-transparent border-0 border-b py-2",
+            "w-20 border-0 border-b bg-transparent py-2",
             "font-mono text-sm tabular-nums",
-            "focus:outline-none transition-colors duration-500 ease-luxury",
+            "transition-colors duration-500 ease-luxury focus:outline-none",
             hasOverride
               ? "border-foreground text-foreground focus:border-accent"
               : "border-foreground/30 text-muted-foreground/50 focus:border-accent"
           )}
         />
-        <span className="font-sans text-xs text-muted-foreground">days</span>
-        {!hasOverride ? (
-          <span className="font-serif italic text-xs text-muted-foreground/40">default: {defaultLt}</span>
-        ) : null}
+        <span className="font-sans text-xs text-muted-foreground">天</span>
+        {!hasOverride ? <span className="font-serif text-xs text-muted-foreground/40">預設：{defaultLt}</span> : null}
       </div>
     </div>
   );
@@ -591,8 +564,8 @@ function CategoryLtInput({
 function Group({ label, deck, children }: { label: string; deck?: string; children: React.ReactNode }) {
   return (
     <div>
-      <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{label}</span>
-      {deck ? <p className="mt-2 font-serif italic text-sm text-muted-foreground max-w-md">{deck}</p> : null}
+      <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">{label}</span>
+      {deck ? <p className="mt-2 max-w-md font-serif text-sm text-muted-foreground">{deck}</p> : null}
       <div className="mt-6">{children}</div>
     </div>
   );
@@ -622,17 +595,16 @@ function RadioRow({
     <label
       htmlFor={id}
       className={cn(
-        "group/radio cursor-pointer flex items-start gap-4 py-4 border-t border-foreground/10 transition-colors duration-500 ease-luxury",
+        "group/radio flex cursor-pointer items-start gap-4 border-t border-foreground/10 py-4 transition-colors duration-500 ease-luxury",
         "hover:border-foreground/40",
         checked && "border-foreground/40"
       )}
     >
       <input id={id} type="radio" name={name} value={value} checked={checked} onChange={onChange} className="sr-only" />
-      {/* Custom marker — square that fills with foreground when checked */}
       <span
         aria-hidden="true"
         className={cn(
-          "mt-1 inline-block w-3 h-3 border border-foreground transition-colors duration-500 ease-luxury",
+          "mt-1 inline-block h-3 w-3 border border-foreground transition-colors duration-500 ease-luxury",
           checked ? "bg-foreground" : "bg-transparent"
         )}
       />
@@ -665,17 +637,17 @@ function UnderlineSelect({
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Tier <span className="text-foreground">{tier}</span>
+      <label htmlFor={id} className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
+        等級 <span className="text-foreground">{tier}</span>
       </label>
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className={cn(
-          "mt-2 w-full bg-transparent border-0 border-b border-foreground py-2",
-          "font-sans text-base text-foreground appearance-none cursor-pointer",
-          "focus:outline-none focus:border-accent transition-colors duration-500 ease-luxury"
+          "mt-2 w-full cursor-pointer appearance-none border-0 border-b border-foreground bg-transparent py-2",
+          "font-sans text-base text-foreground",
+          "transition-colors duration-500 ease-luxury focus:border-accent focus:outline-none"
         )}
       >
         {options.map((o) => (
@@ -706,7 +678,7 @@ function UnderlineNumber({
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+      <label htmlFor={id} className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
         {label}
       </label>
       <div className="mt-2 flex items-baseline gap-3 border-b border-foreground py-2 transition-colors duration-500 ease-luxury focus-within:border-accent">
@@ -723,9 +695,9 @@ function UnderlineNumber({
             if (max !== undefined && next > max) return;
             onChange(next);
           }}
-          className={cn("w-24 bg-transparent border-0 outline-none", "font-mono text-2xl tabular-nums text-foreground")}
+          className={cn("w-24 border-0 bg-transparent outline-none", "font-mono text-2xl tabular-nums text-foreground")}
         />
-        {suffix ? <span className="font-serif italic text-sm text-muted-foreground">{suffix}</span> : null}
+        {suffix ? <span className="font-serif text-sm text-muted-foreground">{suffix}</span> : null}
       </div>
     </div>
   );
@@ -746,13 +718,12 @@ function ToggleRow({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex-1">
-        <label htmlFor={id} className="font-serif text-lg leading-tight text-foreground cursor-pointer">
+        <label htmlFor={id} className="cursor-pointer font-serif text-lg leading-tight text-foreground">
           {label}
         </label>
         {deck ? <p className="mt-1 font-sans text-sm text-muted-foreground">{deck}</p> : null}
       </div>
 
-      {/* Switch */}
       <button
         id={id}
         type="button"
@@ -760,8 +731,8 @@ function ToggleRow({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative inline-flex h-6 w-12 items-center border transition-colors duration-500 ease-luxury shrink-0 mt-1",
-          checked ? "bg-foreground border-foreground" : "bg-transparent border-foreground/40"
+          "relative mt-1 inline-flex h-6 w-12 shrink-0 items-center border transition-colors duration-500 ease-luxury",
+          checked ? "border-foreground bg-foreground" : "border-foreground/40 bg-transparent"
         )}
       >
         <span
@@ -792,17 +763,10 @@ function MonthCheckbox({
     <label
       htmlFor={id}
       className={cn(
-        "group/m flex items-center gap-3 cursor-pointer py-2 px-3 border transition-colors duration-500 ease-luxury",
+        "group/m flex cursor-pointer items-center gap-3 border px-3 py-2 transition-colors duration-500 ease-luxury",
         checked
-          ? // Selected: deeper "milk-tea paper" wash (#E3DBCF, step deeper
-            // than --color-muted so it reads distinctly against the page)
-            // with a 3px gold left stripe — evokes a bookmark tab clipped
-            // to the edge of an editorial spread.
-            "bg-[#E3DBCF] border-foreground/20 border-l-[3px] border-l-accent text-foreground"
-          : // Unselected: transparent, near-invisible outline, faded type.
-            // Hover lifts it gently so the grid feels responsive without
-            // introducing noise to the at-rest view.
-            "bg-transparent border-foreground/10 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+          ? "border-foreground/20 border-l-[3px] border-l-accent bg-[#E3DBCF] text-foreground"
+          : "border-foreground/10 bg-transparent text-muted-foreground hover:border-foreground/30 hover:text-foreground"
       )}
     >
       <input id={id} type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
@@ -826,27 +790,34 @@ function MonthCheckbox({
 function summarizePolicy(p: ReturnType<typeof useWorkflow>["parameters"]): string {
   const z = p.zScores ?? { A: 2.05, B: 1.65, C: 1.28 };
   const months = p.selectedMonths?.length ?? 12;
-  const ma = p.enableMa ? `, MA(${p.maWindow ?? 3})` : "";
-  const outlier = p.enableOutlier ? "" : ", outliers kept";
-  const gran = p.granularity ?? "monthly";
+  const ma = p.enableMa ? `，移動平均(${p.maWindow ?? 3})` : "";
+  const outlier = p.enableOutlier ? "" : "，保留離群值";
+  const gran = formatGranularity(p.granularity ?? "monthly");
   const dateRange = p.dateFrom && p.dateTo ? ` · ${p.dateFrom}~${p.dateTo}` : "";
-  const modeLabel =
-    p.calcMode === "compare"
-      ? "Compare"
-      : p.calcMode === "all"
-        ? "Split"
-        : p.calcMode === "total"
-          ? "Consolidated"
-          : "Compare";
+  const modeLabel = formatCalcMode(p.calcMode ?? "compare");
 
   return (
-    `${modeLabel} · ${gran} · LT ${p.leadTime ?? 30}d · min ${p.minMonths ?? 2}m · ` +
-    `Z(${z.A}/${z.B}/${z.C}) · ${months}/12 months${dateRange}${ma}${outlier}.`
+    `${modeLabel} · ${gran} · 前置期 ${p.leadTime ?? 30} 天 · 最少 ${p.minMonths ?? 2} 期 · ` +
+    `Z(${z.A}/${z.B}/${z.C}) · 已選 ${months}/12 個月${dateRange}${ma}${outlier}`
   );
 }
 
+function formatCalcMode(mode: CalcMode): string {
+  if (mode === "compare") return "對比";
+  if (mode === "all") return "分倉";
+  if (mode === "total") return "總倉";
+  return "對比";
+}
+
+function formatGranularity(granularity: Granularity): string {
+  if (granularity === "monthly") return "月";
+  if (granularity === "weekly") return "週";
+  if (granularity === "daily") return "日";
+  return "月";
+}
+
 // ---------------------------------------------------------------------------
-// Week range selector (weekly mode)
+// Week range selector
 // ---------------------------------------------------------------------------
 
 function WeekRangeSelector({
@@ -859,11 +830,7 @@ function WeekRangeSelector({
   onChange: (weeks: string[]) => void;
 }) {
   if (availableWeeks.length === 0) {
-    return (
-      <div className="mt-4 text-sm text-muted-foreground font-serif italic">
-        Upload sales data to see available weeks.
-      </div>
-    );
+    return <div className="mt-4 font-serif text-sm text-muted-foreground">請先上傳銷貨資料以查看可用週別。</div>;
   }
 
   const fromWeek = selectedWeeks?.[0] ?? availableWeeks[0];
@@ -879,10 +846,10 @@ function WeekRangeSelector({
   };
 
   const presets = [
-    { label: "Last 4w", count: 4 },
-    { label: "Last 8w", count: 8 },
-    { label: "Last 12w", count: 12 },
-    { label: "All", count: availableWeeks.length },
+    { label: "近 4 週", count: 4 },
+    { label: "近 8 週", count: 8 },
+    { label: "近 12 週", count: 12 },
+    { label: "全部", count: availableWeeks.length },
   ];
 
   const weekCount = selectedWeeks?.length ?? availableWeeks.length;
@@ -890,16 +857,16 @@ function WeekRangeSelector({
   return (
     <div className="mt-4 flex flex-col gap-4">
       <div className="flex items-baseline gap-3">
-        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Week range</span>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">
-          {weekCount} weeks ({weekCount * 7} days)
+        <span className="font-sans text-[10px] tracking-[0.3em] text-muted-foreground">週別範圍</span>
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+          {weekCount} 週（{weekCount * 7} 天）
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">From</span>
+          <span className="text-muted-foreground">起</span>
           <select
-            className="border-b border-foreground/20 bg-transparent py-1 px-2 font-mono text-xs focus:outline-none focus:border-foreground"
+            className="border-b border-foreground/20 bg-transparent px-2 py-1 font-mono text-xs focus:border-foreground focus:outline-none"
             value={fromWeek}
             onChange={(e) => setRange(e.target.value, toWeek)}
           >
@@ -910,10 +877,11 @@ function WeekRangeSelector({
             ))}
           </select>
         </label>
+
         <label className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">To</span>
+          <span className="text-muted-foreground">迄</span>
           <select
-            className="border-b border-foreground/20 bg-transparent py-1 px-2 font-mono text-xs focus:outline-none focus:border-foreground"
+            className="border-b border-foreground/20 bg-transparent px-2 py-1 font-mono text-xs focus:border-foreground focus:outline-none"
             value={toWeek}
             onChange={(e) => setRange(fromWeek, e.target.value)}
           >
@@ -924,13 +892,14 @@ function WeekRangeSelector({
             ))}
           </select>
         </label>
+
         <div className="flex items-center gap-2">
           {presets.map((p) => (
             <button
               key={p.label}
               type="button"
               className={cn(
-                "px-2 py-0.5 text-[10px] uppercase tracking-wider border transition-colors",
+                "border px-2 py-0.5 text-[10px] tracking-wider transition-colors",
                 weekCount === p.count
                   ? "border-foreground text-foreground"
                   : "border-foreground/20 text-muted-foreground hover:border-foreground/40"

@@ -1,4 +1,3 @@
-import { VerticalLabel } from "@/components/layout/VerticalLabel";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { WorkflowProvider } from "@/lib/workflow-context";
 import { UploadsSection } from "@/components/workflow/UploadsSection";
@@ -8,166 +7,68 @@ import { ResultsSummary } from "@/components/workflow/ResultsSummary";
 import { ResultsTable } from "@/components/workflow/ResultsTable";
 import { AnalysisEmpty } from "@/components/workflow/AnalysisEmpty";
 
-/**
- * Home page — Safety Stock Editorial v5.0
- *
- * Structure (single-page editorial):
- *   Cover               — Masthead with hero
- *   Section 01 · Sources        (Phase 2: Upload cards)
- *   Section 02 · Configuration  (Phase 3: Parameters form)
- *   Section 03 · Analysis       (Phase 4: Results + Export)
- *
- * Phase 1 renders the Cover + three section headers with placeholder
- * bodies so we can verify the page structure before wiring in the real
- * interactive content.
- */
 export default function Home() {
   return (
     <main className="relative">
-      {/* ==========================================================
-          Cover · Masthead
-          ========================================================== */}
-      <section className="relative min-h-[90vh] px-8 md:px-16 py-20 md:py-32">
-        {/* Overline */}
-        <div className="flex items-center gap-6">
-          <span className="h-px w-8 md:w-12 bg-foreground" />
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Vol. 05 — 2026 · Editorial Intelligence
+      {/* Compact cover */}
+      <section className="relative border-b border-foreground/20 px-6 py-10 md:px-12 md:py-14">
+        <div className="flex items-center gap-4">
+          <span className="h-px w-8 bg-foreground" />
+          <span className="font-sans text-[10px] tracking-[0.25em] text-muted-foreground">
+            2026 年第 05 版 · 安全庫存分析
           </span>
         </div>
 
-        {/* Hero headline */}
-        <h1 className="mt-16 md:mt-24 font-serif leading-[0.9] tracking-tight text-foreground text-5xl sm:text-6xl md:text-8xl lg:text-9xl">
-          Safety
+        <h1 className="mt-8 font-serif text-6xl leading-[0.9] tracking-tight text-foreground sm:text-7xl md:text-8xl lg:text-9xl">
+          安全
           <br />
-          <span className="italic text-accent">Stock.</span>
-          <br />
-          Curated.
+          <span className="italic text-accent">庫存</span>
         </h1>
 
-        {/* Subheading */}
-        <p className="mt-12 max-w-xl font-sans text-base md:text-lg leading-relaxed text-muted-foreground">
-          A deliberate approach to inventory intelligence. Upload your sales history, configure your policy, and read
-          the resulting analysis like the editorial spread it deserves to be.
+        <p className="mt-8 max-w-2xl font-sans text-base leading-relaxed text-muted-foreground md:text-lg">
+          透過歷史銷貨資料進行安全庫存分析。上傳資料、設定參數，快速查看分析結果與補貨建議。
         </p>
-
-        {/* Masthead footer rule */}
-        <div className="mt-24 border-t border-foreground/20 pt-6 flex items-end justify-between">
-          <div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Issue · 05</span>
-          </div>
-          <div className="text-right">
-            <span className="font-serif italic text-sm text-muted-foreground">Safety Stock Automation v5.0</span>
-          </div>
-        </div>
-
-        {/* Vertical side label (lg+) */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2">
-          <VerticalLabel side="left">SS · Editorial / Vol. 05</VerticalLabel>
-        </div>
-
-        {/* Right-side editorial apparatus (xl+) */}
-        <aside aria-hidden="true" className="absolute right-16 top-32 hidden xl:flex flex-col gap-16 w-52 select-none">
-          <div className="text-right">
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Printed
-            </span>
-            <span className="mt-3 block font-serif text-2xl italic leading-none text-foreground">MMXXVI</span>
-            <span className="mt-1 block font-sans text-xs tracking-[0.2em] text-muted-foreground">APR · XV</span>
-          </div>
-
-          <div className="text-right border-t border-foreground/20 pt-6">
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              In this issue
-            </span>
-            <ol className="mt-4 space-y-2 font-serif text-sm text-foreground">
-              <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">I</span>
-                Sources
-              </li>
-              <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">II</span>
-                Configuration
-              </li>
-              <li>
-                <span className="font-sans text-[10px] tracking-[0.2em] text-muted-foreground mr-2">III</span>
-                Analysis
-              </li>
-            </ol>
-          </div>
-
-          <div className="text-right border-t border-foreground/20 pt-6">
-            <p className="font-serif italic text-sm leading-relaxed text-muted-foreground">
-              &ldquo;The most valuable inventory is the one you didn&apos;t need to carry.&rdquo;
-            </p>
-            <span className="mt-3 block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              — Editor&apos;s note
-            </span>
-          </div>
-        </aside>
       </section>
 
-      {/* ==========================================================
-          Interactive tree — everything beyond the cover lives inside
-          a single WorkflowProvider so state flows across sections.
-          ========================================================== */}
       <WorkflowProvider>
         {/* Section 01 · Sources */}
-        <section id="sources" className="relative px-8 md:px-16 py-20 md:py-32">
+        <section id="sources" className="relative px-6 py-10 md:px-12 md:py-14">
           <SectionHeader
             numeral="01"
-            overline="Sources"
-            title="Materials,"
-            italicAccent="selected."
-            deck={
-              <>
-                Three inputs set the foundation for every analysis that follows. Only the sales ledger is required;
-                price and plan sheets refine the interpretation.
-              </>
-            }
-            meta="Upload"
+            overline="資料來源"
+            title="上傳"
+            italicAccent="資料"
+            deck={<>上傳銷貨明細、單價表與庫存計畫。銷貨明細為必填。</>}
+            meta="上傳"
           />
 
           <UploadsSection />
         </section>
 
         {/* Section 02 · Configuration */}
-        <section id="configuration" className="relative px-8 md:px-16 py-20 md:py-32">
+        <section id="configuration" className="relative px-6 py-10 md:px-12 md:py-14">
           <SectionHeader
             numeral="02"
-            overline="Configuration"
-            title="The"
-            italicAccent="policy."
-            deck={
-              <>
-                Service level, lead time, ABC thresholds — the knobs that turn raw demand into a considered reorder
-                point.
-              </>
-            }
-            meta="Parameters"
+            overline="參數設定"
+            title="計算"
+            italicAccent="條件"
+            deck={<>設定服務水準、前置期、ABC 門檻、日期範圍與統計處理方式。</>}
+            meta="參數"
           />
 
           <ParametersForm />
-
-          {/* The calculate trigger lives at the bottom of Configuration
-              because it reads from the params above. Its result renders
-              in Section 03 below. */}
           <CalculateBar />
         </section>
 
         {/* Section 03 · Analysis */}
-        <section id="analysis" className="relative px-8 md:px-16 py-20 md:py-32">
+        <section id="analysis" className="relative px-6 py-10 md:px-12 md:py-14">
           <SectionHeader
             numeral="03"
-            overline="Analysis"
-            title="The"
-            italicAccent="calculation."
-            deck={
-              <>
-                The results spread: summary statistics, per-SKU detail, excluded items, and export to Excel or SAP MM17.
-              </>
-            }
-            meta="Results"
+            overline="分析結果"
+            title="計算"
+            italicAccent="結果"
+            deck={<>檢視摘要統計、SKU 明細、排除項目，並匯出 Excel 或 SAP MM17 檔案。</>}
+            meta="結果"
           />
 
           <AnalysisEmpty />
@@ -176,26 +77,8 @@ export default function Home() {
         </section>
       </WorkflowProvider>
 
-      {/* ==========================================================
-          Colophon (footer)
-          ========================================================== */}
-      <footer className="border-t border-foreground/20 px-8 md:px-16 py-16">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
-          <div>
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Colophon
-            </span>
-            <p className="mt-4 font-serif italic text-lg text-foreground">
-              Set in Playfair Display &amp; Inter.
-              <br />
-              Printed on warm alabaster, bound in charcoal.
-            </p>
-          </div>
-          <div className="text-left md:text-right">
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Engine</span>
-            <span className="mt-2 block font-mono text-xs text-foreground">Python · Flask · Next.js 16</span>
-          </div>
-        </div>
+      <footer className="border-t border-foreground/20 px-6 py-6 md:px-12">
+        <p className="font-sans text-xs text-muted-foreground">安全庫存計算系統</p>
       </footer>
     </main>
   );

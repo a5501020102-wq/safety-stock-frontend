@@ -8,14 +8,7 @@ import { useWorkflow } from "@/lib/workflow-context";
 /**
  * CalculateBar
  * ---------------------------------------------------------------------------
- * The "action" strip that lives between Configuration (02) and Analysis (03).
- *
- * Responsibilities:
- *  - Disable the calculate button until the sales ledger is uploaded.
- *  - Provide a clear loading state while the server crunches.
- *  - Surface API errors with the standardized `code` + message contract.
- *  - After a successful calculation, smooth-scroll to #analysis so the user
- *    lands on the fresh results spread without hunting.
+ * 位於「參數設定」與「分析結果」之間的計算操作列。
  */
 export function CalculateBar() {
   const {
@@ -35,10 +28,8 @@ export function CalculateBar() {
   const hasTimeFilter = hasSelectedMonths || hasDateRange;
   const canCalculate = hasSales && hasTimeFilter && !isCalculating;
 
-  // Keep a ref to the latest abort controller so we can cancel a stuck run.
   const abortRef = useRef<AbortController | null>(null);
 
-  // If the user navigates away while a calc is in-flight, cancel it cleanly.
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
@@ -59,9 +50,9 @@ export function CalculateBar() {
         planFileId: uploads.plan?.fileId ?? null,
         params: parameters,
       });
+
       setCalculationResult(result);
 
-      // Smooth-scroll to the results section after the next paint.
       requestAnimationFrame(() => {
         document.getElementById("analysis")?.scrollIntoView({
           behavior: "smooth",
@@ -72,7 +63,7 @@ export function CalculateBar() {
       if (err instanceof ApiClientError) {
         setCalculationError(`[${err.code}] ${err.message}`);
       } else if (err instanceof DOMException && err.name === "AbortError") {
-        // Silent — user navigated away
+        // 使用者離開頁面或取消請求時不顯示錯誤
       } else {
         setCalculationError((err as Error).message || "計算失敗");
       }
@@ -90,30 +81,25 @@ export function CalculateBar() {
     setCalculationResult,
   ]);
 
-  // --------------------------------------------------------------------
-  // Reason strip: helps the user understand why the button is disabled.
-  // --------------------------------------------------------------------
   const reason = !hasSales
-    ? "Upload the sales ledger to begin."
+    ? "請先上傳銷貨明細。"
     : !hasTimeFilter
-      ? "Set a date range or select at least one month."
+      ? "請設定日期範圍或至少選擇一個月份。"
       : isCalculating
-        ? "Crunching the numbers…"
+        ? "計算中…"
         : calculationResult
-          ? "Results are ready below. Recalculate to iterate."
-          : "All set. Press Calculate.";
+          ? "下方已有結果，可重新計算。"
+          : "設定完成，請按計算。";
 
   return (
-    <div className="mt-20 md:mt-24 border-t border-foreground/25 pt-10">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-        {/* Reason / status */}
+    <div className="mt-16 border-t border-foreground/25 pt-8 md:mt-20 md:pt-10">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex-1">
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Next step
-          </span>
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">下一步</span>
+
           <p
             className={cn(
-              "mt-3 font-serif italic text-xl md:text-2xl leading-tight",
+              "mt-3 font-serif text-xl leading-tight md:text-2xl",
               isCalculating ? "text-accent" : "text-foreground"
             )}
           >
@@ -127,25 +113,23 @@ export function CalculateBar() {
           ) : null}
         </div>
 
-        {/* Primary action */}
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={run}
             disabled={!canCalculate}
             className={cn(
-              "group/cta relative inline-flex items-center justify-center overflow-hidden",
-              "h-14 px-12 border border-foreground",
-              "font-sans text-xs uppercase tracking-[0.3em]",
+              "group/cta relative inline-flex h-14 items-center justify-center overflow-hidden",
+              "border border-foreground px-12",
+              "font-sans text-xs tracking-[0.3em]",
               "transition-colors duration-500 ease-luxury",
               canCalculate
-                ? "bg-foreground text-background cursor-pointer"
-                : "bg-transparent text-foreground/30 border-foreground/25 cursor-not-allowed"
+                ? "cursor-pointer bg-foreground text-background"
+                : "cursor-not-allowed border-foreground/25 bg-transparent text-foreground/30"
             )}
             aria-busy={isCalculating}
             aria-disabled={!canCalculate}
           >
-            {/* Gold slide-in on hover (only when enabled) */}
             {canCalculate && !isCalculating ? (
               <span
                 aria-hidden="true"
@@ -157,12 +141,12 @@ export function CalculateBar() {
               {isCalculating ? (
                 <>
                   <Spinner />
-                  Calculating
+                  計算中
                 </>
               ) : calculationResult ? (
-                "Recalculate"
+                "重新計算"
               ) : (
-                "Calculate"
+                "計算"
               )}
             </span>
           </button>
@@ -176,7 +160,7 @@ function Spinner() {
   return (
     <span
       aria-hidden="true"
-      className="inline-block w-3 h-3 border-t border-r border-background animate-spin"
+      className="inline-block h-3 w-3 animate-spin border-r border-t border-background"
       style={{ animationDuration: "800ms" }}
     />
   );

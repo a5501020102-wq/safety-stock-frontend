@@ -3,7 +3,7 @@ import { Inter, Playfair_Display, Noto_Sans_TC, Noto_Serif_TC, JetBrains_Mono } 
 import "./globals.css";
 import { PaperNoise } from "@/components/layout/PaperNoise";
 import { VerticalGridlines } from "@/components/layout/VerticalGridlines";
-
+import { ui } from "@/lib/i18n";
 /**
  * Font pairing rationale:
  * - Playfair Display: high-contrast serif for editorial headlines.
@@ -46,8 +46,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Safety Stock — Editorial Intelligence",
-  description: "Curated inventory analysis — 安全庫存自動化 v5.0",
+  title: ui.app.title,
+  description: ui.app.description,
 };
 
 export default function RootLayout({

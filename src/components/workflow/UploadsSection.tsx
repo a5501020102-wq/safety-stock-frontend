@@ -6,28 +6,23 @@ import { useWorkflow } from "@/lib/workflow-context";
 /**
  * UploadsSection
  * ---------------------------------------------------------------------------
- * Renders the three upload slots (sales / price / plan) in an editorial grid.
+ * 顯示三個上傳區塊：銷貨明細、單價表、庫存計畫。
  *
- * - Sales is required and sits first (wider column on desktop to signal
- *   primacy).
- * - Price and plan are optional and share the remaining width.
- *
- * A small status strip below summarizes which files are loaded, so users
- * scanning to Section 02 can tell at a glance whether they're ready to
- * calculate.
+ * - 銷貨明細為必填。
+ * - 單價表與庫存計畫為選填。
+ * - 下方狀態列顯示目前已上傳的資料來源數量。
  */
 export function UploadsSection() {
   const { uploads } = useWorkflow();
 
   const loadedCount = [uploads.sales, uploads.price, uploads.plan].filter(Boolean).length;
-
   const ready = Boolean(uploads.sales);
 
   return (
-    <div className="mt-16">
-      {/* Three-slot editorial grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 md:gap-10">
-        {/* Sales — required, wider on lg */}
+    <div className="mt-10">
+      {/* Three-slot upload grid */}
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-12">
+        {/* Sales — required */}
         <div className="lg:col-span-6">
           <UploadCard
             slot="sales"
@@ -35,9 +30,9 @@ export function UploadsSection() {
             required
             title={
               <>
-                Sales
+                銷貨
                 <br />
-                <em className="italic text-accent">ledger.</em>
+                <em className="italic text-accent">明細</em>
               </>
             }
             hint="出貨點、料號、日期、數量。此檔必填。"
@@ -51,12 +46,12 @@ export function UploadsSection() {
             numeral="II"
             title={
               <>
-                Price
+                單價
                 <br />
-                <em className="italic text-accent">list.</em>
+                <em className="italic text-accent">表</em>
               </>
             }
-            hint="料號 · 單價。用於 ABC 分級。選填。"
+            hint="料號、單價。用於 ABC 分級。選填。"
           />
         </div>
 
@@ -67,37 +62,39 @@ export function UploadsSection() {
             numeral="III"
             title={
               <>
-                Stock
+                庫存
                 <br />
-                <em className="italic text-accent">plan.</em>
+                <em className="italic text-accent">計畫</em>
               </>
             }
-            hint="ERP 計畫：需求 / 供給 / 調撥。選填。"
+            hint="ERP 計畫：需求、供給、調撥。選填。"
           />
         </div>
       </div>
 
       {/* Status strip */}
-      <div className="mt-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-t border-foreground/15 pt-6">
+      <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-foreground/15 pt-5 md:flex-row md:items-end">
         <div>
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Status</span>
-          <p className="mt-2 font-serif italic text-lg leading-tight text-foreground">
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">狀態</span>
+
+          <p className="mt-2 font-serif text-lg leading-tight text-foreground">
             {ready ? (
               <>
-                {loadedCount} of 3 sources linked. Ready for{" "}
-                <em className="not-italic font-serif text-accent">Configuration</em>.
+                {loadedCount} / 3 個資料來源已連結。可進入
+                <em className="not-italic text-accent">參數設定</em>。
               </>
             ) : (
-              <>Awaiting the sales ledger.</>
+              <>請先上傳銷貨明細。</>
             )}
           </p>
         </div>
+
         {ready ? (
           <a
             href="#configuration"
-            className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground border-b border-foreground pb-1 hover:text-accent hover:border-accent transition-colors duration-500 ease-luxury"
+            className="border-b border-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
           >
-            Proceed to 02 · Configuration →
+            前往 02 · 參數設定 →
           </a>
         ) : null}
       </div>

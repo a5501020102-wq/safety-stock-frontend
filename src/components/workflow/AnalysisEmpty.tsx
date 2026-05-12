@@ -5,35 +5,26 @@ import { useWorkflow } from "@/lib/workflow-context";
 /**
  * AnalysisEmpty
  * ---------------------------------------------------------------------------
- * Placeholder shown inside Section 03 when no calculation has been run yet.
- *
- * Renders nothing once a result exists (ResultsSummary + ResultsTable take
- * over). Keeps the section from looking broken on first visit.
+ * 尚未產生計算結果時顯示的空狀態。
  */
 export function AnalysisEmpty() {
-  const { calculationResult, uploads, isCalculating } = useWorkflow();
-
-  // If we have a result or are actively computing, render nothing here.
-  if (calculationResult || isCalculating) return null;
+  const { uploads, calculationResult } = useWorkflow();
 
   const hasSales = Boolean(uploads.sales?.fileId);
 
+  if (calculationResult) return null;
+
   return (
-    <div className="mt-16 border-t border-foreground/15 pt-10">
-      <div className="max-w-xl">
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          Awaiting run
-        </span>
-        <p className="mt-3 font-serif italic text-xl leading-relaxed text-foreground/70">
-          {hasSales
-            ? "Press Calculate above to generate the spread."
-            : "Upload the sales ledger to unlock this section."}
-        </p>
-        <p className="mt-3 font-sans text-sm leading-relaxed text-muted-foreground">
-          The Analysis spread will render here: a parameters snapshot, summary cards, and a full results table with
-          filters and export actions.
-        </p>
-      </div>
+    <div className="border-t border-foreground/15 pt-6">
+      <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">尚未計算</span>
+
+      <p className="mt-4 font-serif text-lg leading-tight text-foreground">
+        {hasSales ? "請按上方的計算以產生分析結果。" : "請先上傳銷貨明細以啟用此區塊。"}
+      </p>
+
+      <p className="mt-4 max-w-xl font-sans text-sm leading-relaxed text-muted-foreground">
+        分析結果將顯示於此：參數快照、摘要卡片、完整結果表格、篩選與匯出功能。
+      </p>
     </div>
   );
 }
