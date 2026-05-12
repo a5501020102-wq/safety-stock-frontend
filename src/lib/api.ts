@@ -40,7 +40,6 @@ export function getApiBase(): string {
   if (!url) {
     if (typeof window !== "undefined" && !_apiWarned) {
       _apiWarned = true;
-      // eslint-disable-next-line no-console
       console.warn(
         "[api] NEXT_PUBLIC_API_URL is not set. Falling back to http://localhost:5000. " +
           "Set this in .env.local (dev) or your deployment env (prod)."
