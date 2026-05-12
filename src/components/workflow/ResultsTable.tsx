@@ -970,7 +970,7 @@ function NumericCell({
   );
 }
 
-function TrendCell({ label, pct }: { label?: string; pct?: number | null }) {
+function TrendCell({ label }: { label?: string; pct?: number | null }) {
   const display = label ?? "—";
   return (
     <td className="py-3 px-3 text-right">
