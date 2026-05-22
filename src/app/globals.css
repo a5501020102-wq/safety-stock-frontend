@@ -159,6 +159,35 @@
 }
 
 /* ==========================================================================
+   TabbedLayout — tab panel display switching + fade-in entry
+   ==========================================================================
+   切換策略：display:none 隱藏非當前 panel（state 全保留 + 切換瞬間）。
+   進入動畫：active panel 套用 fade-in keyframe（無 cross-fade）。
+   ========================================================================== */
+.tab-panel {
+  display: none;
+}
+.tab-panel-active {
+  display: block;
+  animation: fade-in 400ms var(--ease-luxury) both;
+}
+
+/* ==========================================================================
+   Mobile accordion — tab nav 漢堡選單展開動畫
+   ========================================================================== */
+.accordion-panel {
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 200ms var(--ease-luxury),
+    opacity 200ms var(--ease-luxury);
+}
+.accordion-panel-open {
+  max-height: 300px;
+  opacity: 1;
+}
+
+/* ==========================================================================
    Accessibility — respect user motion preferences
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
