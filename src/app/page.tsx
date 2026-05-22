@@ -6,6 +6,7 @@ import { CalculateBar } from "@/components/workflow/CalculateBar";
 import { ResultsSummary } from "@/components/workflow/ResultsSummary";
 import { ResultsTable } from "@/components/workflow/ResultsTable";
 import { AnalysisEmpty } from "@/components/workflow/AnalysisEmpty";
+import { AnalysisOverlay } from "@/components/workflow/AnalysisOverlay";
 
 export default function Home() {
   return (
@@ -32,8 +33,10 @@ export default function Home() {
           analysis={
             <>
               <AnalysisEmpty />
-              <ResultsSummary />
-              <ResultsTable />
+              <AnalysisOverlay>
+                <ResultsSummary />
+                <ResultsTable />
+              </AnalysisOverlay>
             </>
           }
         />

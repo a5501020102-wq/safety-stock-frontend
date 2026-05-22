@@ -685,13 +685,17 @@ function ExpandableResultRow({
           </>
         ) : null}
       </tr>
-      {expanded ? (
-        <tr>
-          <td colSpan={colCount} className="border-l-2 border-l-[color:var(--color-accent)] bg-[#F3EEE7]/50 px-6 py-5">
-            <DemandDetail row={row} />
-          </td>
-        </tr>
-      ) : null}
+      {/* 列展開動畫：<tr>/<td> 永遠 render，外層 div 用 max-height + opacity transition；
+          內層 div 帶實際樣式（border / bg / padding），collapsed 時被 overflow: hidden 截斷不可見。 */}
+      <tr>
+        <td colSpan={colCount} className="p-0">
+          <div className={cn("row-detail", expanded && "row-detail-open")}>
+            <div className="border-l-2 border-l-[color:var(--color-accent)] bg-[#F3EEE7]/50 px-6 py-5">
+              <DemandDetail row={row} />
+            </div>
+          </div>
+        </td>
+      </tr>
     </>
   );
 }
