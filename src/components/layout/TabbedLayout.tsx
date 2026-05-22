@@ -112,7 +112,7 @@ export function TabbedLayout({ sources, configuration, analysis }: TabbedLayoutP
             role="tabpanel"
             aria-labelledby={`tab-${id}`}
             tabIndex={-1}
-            className={cn("tab-panel", isActive ? "tab-panel-active" : "tab-panel-hidden")}
+            className={cn("tab-panel px-6 py-10 md:px-12 md:py-14", isActive ? "tab-panel-active" : "tab-panel-hidden")}
           >
             {panels[id]}
           </section>
