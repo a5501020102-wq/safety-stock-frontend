@@ -262,7 +262,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     await home.selectGranularity("weekly");
 
     await home.page.reload();
-    await home.page.waitForLoadState("networkidle");
+    await home.page.waitForLoadState("load");
 
     await expect(home.leadTimeInput).toHaveValue("45");
     await expect(home.granularityWeekly).toBeChecked();
@@ -306,7 +306,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
 
     // 重新整理頁面（hash 保留）→ 分析 tab 仍為 active
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     await expect(page.getByRole("tablist", { name: "主要區段" }).getByRole("tab", { name: /分析/ })).toHaveAttribute(
       "aria-selected",
       "true"

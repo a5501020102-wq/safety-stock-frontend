@@ -128,13 +128,15 @@ export class HomePage {
 
   async goto() {
     await this.page.goto("/");
-    await this.page.waitForLoadState("networkidle");
+    // 改用 "load"：Next.js 16 dev/prod build 有持續 network activity
+    // （prefetch、background fetch），networkidle 在 CI 易卡 30s timeout
+    await this.page.waitForLoadState("load");
   }
 
   async clearLocalStorage() {
     await this.page.evaluate(() => localStorage.clear());
     await this.page.reload();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForLoadState("load");
   }
 
   async uploadSalesFile(filePath: string) {

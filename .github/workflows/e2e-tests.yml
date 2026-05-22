@@ -9,7 +9,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout frontend
@@ -49,8 +49,18 @@ jobs:
         run: |
           cd safety-stock-automation
           python -c "from app import app; app.run(host='0.0.0.0', port=5000, use_reloader=False)" &
-          sleep 5
-          curl -f http://localhost:5000/health || exit 1
+          # 輪詢 /health 最多 30 秒（之前 sleep 5 在 cold start 偶爾不夠）
+          for i in {1..30}; do
+            if curl -sf http://localhost:5000/health > /dev/null; then
+              echo "Backend ready after ${i}s"
+              break
+            fi
+            sleep 1
+            if [ $i -eq 30 ]; then
+              echo "Backend failed to start within 30s"
+              exit 1
+            fi
+          done
         env:
           FLASK_ENV: testing
 
@@ -60,8 +70,18 @@ jobs:
       - name: Start frontend
         run: |
           npm start &
-          sleep 5
-          curl -f http://localhost:3000 || exit 1
+          # 輪詢 frontend 最多 30 秒
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000 > /dev/null; then
+              echo "Frontend ready after ${i}s"
+              break
+            fi
+            sleep 1
+            if [ $i -eq 30 ]; then
+              echo "Frontend failed to start within 30s"
+              exit 1
+            fi
+          done
         env:
           NEXT_PUBLIC_API_URL: http://localhost:5000
 
