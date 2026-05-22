@@ -9,8 +9,8 @@ export const ui = {
     configuration: "參數設定",
     analysis: "分析結果",
     upload: "上傳",
-    parameters: "參數",
-    results: "結果",
+    parameters: "設定",
+    results: "分析",
   },
 
   page: {

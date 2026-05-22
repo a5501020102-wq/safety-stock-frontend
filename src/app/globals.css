@@ -159,6 +159,92 @@
 }
 
 /* ==========================================================================
+   TabbedLayout — tab panel display switching + fade-in entry
+   ==========================================================================
+   切換策略：display:none 隱藏非當前 panel（state 全保留 + 切換瞬間）。
+   進入動畫：active panel 套用 fade-in keyframe（無 cross-fade）。
+   ========================================================================== */
+.tab-panel {
+  display: none;
+}
+.tab-panel-active {
+  display: block;
+  animation: fade-in 400ms var(--ease-luxury) both;
+}
+
+/* ==========================================================================
+   Mobile accordion — tab nav 漢堡選單展開動畫
+   ========================================================================== */
+.accordion-panel {
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 200ms var(--ease-luxury),
+    opacity 200ms var(--ease-luxury);
+}
+.accordion-panel-open {
+  max-height: 300px;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Results table — 列展開動畫
+   ==========================================================================
+   <tr> 不可設 max-height（display: table-row），改用 <td> 內 <div> wrapper。
+   max-height: 4000px 安全上限：最大內容（24 個月 plan + bar chart + summary）
+   實測約 1500px，4000px 留充足餘裕避免內容被截斷。
+   ========================================================================== */
+.row-detail {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 350ms var(--ease-luxury),
+    opacity 350ms var(--ease-luxury);
+}
+.row-detail-open {
+  max-height: 4000px;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Skeleton shimmer — 計算中骨架的微光掃過效果
+   ==========================================================================
+   prefers-reduced-motion 下會被全域 0.01ms 規則停用，視覺降階為靜態灰塊。
+   ========================================================================== */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==========================================================================
+   Print — 列印時顯示所有 tab、隱藏 tab nav
+   ==========================================================================
+   保留「上傳了什麼 + 參數 + 結果」完整 context。
+   ========================================================================== */
+@media print {
+  .tab-nav {
+    display: none !important;
+  }
+  .tab-panel {
+    display: block !important;
+    animation: none !important;
+  }
+  .row-detail {
+    max-height: none !important;
+    opacity: 1 !important;
+  }
+  .accordion-panel {
+    max-height: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ==========================================================================
    Accessibility — respect user motion preferences
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {

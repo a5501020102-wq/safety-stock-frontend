@@ -1,0 +1,56 @@
+#!/bin/bash
+# ============================================================
+# Safety Stock Frontend — Pre-commit Hook
+# 1. prettier --check    格式檢查
+# 2. eslint              lint 檢查
+# 3. tsc --noEmit        型別檢查
+#
+# 安裝：bash scripts/install-hooks.sh
+# 跳過：commit 時加 --no-verify（不建議，僅緊急時使用）
+# ============================================================
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Node.js 可能不在 Git Bash 的 PATH 中（Windows）
+export PATH="/c/Program Files/nodejs:$PATH"
+
+if ! command -v npx &>/dev/null; then
+    echo "[pre-commit] Node.js not found in PATH. Skipping checks."
+    exit 0
+fi
+
+# ----------------------------------------------------------
+# 1. Prettier format check
+# ----------------------------------------------------------
+echo "[pre-commit] prettier --check..."
+cd "$REPO_ROOT" && npx prettier --check . 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[pre-commit] prettier check failed. Run 'npm run format' to fix."
+    exit 1
+fi
+
+# ----------------------------------------------------------
+# 2. ESLint
+# ----------------------------------------------------------
+echo "[pre-commit] eslint..."
+cd "$REPO_ROOT" && npx eslint 2>/dev/null
+ESLINT_EXIT=$?
+# eslint exit 0 = no errors, 1 = errors found, 2 = config problem
+if [ $ESLINT_EXIT -eq 1 ]; then
+    echo "[pre-commit] eslint found errors. Commit aborted."
+    exit 1
+fi
+
+# ----------------------------------------------------------
+# 3. TypeScript type check
+# ----------------------------------------------------------
+echo "[pre-commit] tsc --noEmit..."
+cd "$REPO_ROOT" && npx tsc --noEmit 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[pre-commit] tsc found type errors. Commit aborted."
+    echo "Run 'npx tsc --noEmit' to see details."
+    exit 1
+fi
+
+echo "[pre-commit] all checks passed."
+exit 0

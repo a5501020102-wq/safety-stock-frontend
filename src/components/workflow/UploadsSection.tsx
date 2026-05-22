@@ -1,6 +1,7 @@
 "use client";
 
 import { UploadCard } from "./UploadCard";
+import { useTabContext } from "@/components/layout/TabbedLayout";
 import { useWorkflow } from "@/lib/workflow-context";
 
 /**
@@ -14,6 +15,7 @@ import { useWorkflow } from "@/lib/workflow-context";
  */
 export function UploadsSection() {
   const { uploads } = useWorkflow();
+  const { setActiveTab } = useTabContext();
 
   const loadedCount = [uploads.sales, uploads.price, uploads.plan].filter(Boolean).length;
   const ready = Boolean(uploads.sales);
@@ -90,12 +92,13 @@ export function UploadsSection() {
         </div>
 
         {ready ? (
-          <a
-            href="#configuration"
+          <button
+            type="button"
+            onClick={() => setActiveTab("configuration")}
             className="border-b border-foreground pb-1 font-sans text-[11px] tracking-[0.2em] text-foreground transition-colors duration-500 ease-luxury hover:border-accent hover:text-accent"
           >
             前往 02 · 參數設定 →
-          </a>
+          </button>
         ) : null}
       </div>
     </div>
