@@ -64,9 +64,9 @@ export class HomePage {
 
     // Sources
     this.salesUploadArea = page.locator("section#sources article").first();
-    this.salesBrowseBtn = this.salesUploadArea.getByRole("button", { name: /browse files/i });
+    this.salesBrowseBtn = this.salesUploadArea.getByRole("button", { name: /選擇檔案/ });
     this.salesFileInput = this.salesUploadArea.locator('input[type="file"]');
-    this.salesClearBtn = this.salesUploadArea.getByRole("button", { name: /clear/i });
+    this.salesClearBtn = this.salesUploadArea.getByRole("button", { name: /清除/ });
 
     // Calc mode radios
     this.calcModeCompare = page.locator('input[name="calcMode"][value="compare"]');
@@ -78,47 +78,46 @@ export class HomePage {
     this.granularityWeekly = page.locator('input[name="granularity"][value="weekly"]');
     this.granularityDaily = page.locator('input[name="granularity"][value="daily"]');
 
-    // Time inputs
-    this.leadTimeInput = page.locator('label:has-text("Lead time")').locator("..").locator('input[type="number"]');
-    this.minMonthsInput = page.locator('label:has-text("Minimum")').locator("..").locator('input[type="number"]');
+    // Time inputs（label 內含「前置期」「最少月份/期數」）
+    this.leadTimeInput = page.locator('label:has-text("前置期")').locator("..").locator('input[type="number"]');
+    this.minMonthsInput = page.locator('label:has-text("最少")').locator("..").locator('input[type="number"]');
 
-    // Toggles
-    this.madToggle = page.locator('label:has-text("MAD outlier")').locator("..").locator('button[role="switch"]');
-    this.maToggle = page.locator('label:has-text("Moving average")').locator("..").locator('button[role="switch"]');
+    // Toggles（label 內含「MAD 離群值」「移動平均」）
+    this.madToggle = page.locator('label:has-text("MAD 離群值")').locator("..").locator('button[role="switch"]');
+    this.maToggle = page.locator('label:has-text("移動平均")').locator("..").locator('button[role="switch"]');
     this.maWindowSlider = page.locator('input[type="range"][min="2"][max="12"]');
 
     // Months
-    this.selectAllMonthsBtn = page.getByRole("button", { name: /select all/i });
-    this.clearMonthsBtn = page.locator("section#configuration").getByRole("button", { name: /^clear$/i });
+    this.selectAllMonthsBtn = page.getByRole("button", { name: /^全選$/ });
+    this.clearMonthsBtn = page.locator("section#configuration").getByRole("button", { name: /^清除$/ });
     this.monthsCounter = page.locator("span.font-mono.tabular-nums").filter({ hasText: "/ 12" });
 
-    // Advanced
-    this.advancedToggle = page.locator("button").filter({ hasText: /Category lead times/i });
-    this.resetCategoryBtn = page.getByRole("button", { name: /reset all to default/i });
+    // Advanced — 分類前置期 toggle
+    this.advancedToggle = page.locator("button").filter({ hasText: /分類前置期/ });
+    this.resetCategoryBtn = page.getByRole("button", { name: /全部重設為預設值/ });
 
-    // Policy preview — the italic text below "Policy preview" label
-    this.policyPreview = page.locator("section#configuration").locator("text=Policy preview").locator("+ p");
+    // Policy preview — 「計算政策預覽」label 下方的敘述段落
+    this.policyPreview = page.locator("section#configuration").locator("text=計算政策預覽").locator("+ p");
 
-    // Calculate
+    // Calculate button — 中文「計算 / 重新計算 / 計算中」
+    // configuration tab 內含「計算」的 button 僅 CalculateBar 一個，無歧義。
     this.calculateBtn = page.locator("section#configuration button").filter({
-      hasText: /calculate|recalculate|calculating/i,
+      hasText: /計算/,
     });
-    this.calculateStatus = page
-      .locator(
-        "section#configuration p.font-serif.italic.text-xl, section#configuration p.font-serif.italic.md\\:text-2xl"
-      )
-      .first();
+    // CalculateBar 的 reason 訊息（顯示「請先上傳銷貨明細。」「計算中…」「已有結果」等）
+    // 結構：<p className="mt-3 font-serif text-xl ...">{reason}</p>，是 configuration 內唯一的 p.font-serif.text-xl
+    this.calculateStatus = page.locator("section#configuration p.font-serif.text-xl").first();
     this.calculateError = page.locator('[class*="color-shortage"]').filter({ hasText: /\[/ });
 
     // Analysis
     this.analysisSection = page.locator("section#analysis");
     this.parameterSnapshot = this.analysisSection.locator("dl").first();
 
-    // Status tabs
-    this.statusTabAll = this.analysisSection.getByRole("button", { name: /every sku/i });
-    this.statusTabShortage = this.analysisSection.getByRole("button", { name: /below safety/i });
-    this.statusTabHealthy = this.analysisSection.getByRole("button", { name: /within range/i });
-    this.statusTabOverstock = this.analysisSection.getByRole("button", { name: /above/i });
+    // Status tabs — STATUS_FILTERS description 文字
+    this.statusTabAll = this.analysisSection.getByRole("button", { name: /所有料號/ });
+    this.statusTabShortage = this.analysisSection.getByRole("button", { name: /低於安全庫存/ });
+    this.statusTabHealthy = this.analysisSection.getByRole("button", { name: /範圍內/ });
+    this.statusTabOverstock = this.analysisSection.getByRole("button", { name: /超過 3 倍/ });
 
     // Table controls
     this.searchInput = this.analysisSection.locator('input[type="search"]');
@@ -181,7 +180,8 @@ export class HomePage {
   }
 
   async getResultsRowCount(): Promise<number> {
-    return this.analysisSection.locator("table tbody tr").count();
+    // 排除 detail row（永久 render 但 collapsed 時被 max-height:0 截斷不可見）
+    return this.analysisSection.locator("table tbody tr:not([data-row-detail])").count();
   }
 
   async getFirstResultRow() {
