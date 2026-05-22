@@ -34,16 +34,16 @@ export function ResultsTable() {
       <div className="mt-16 flex flex-col gap-20">
         <ExportBar result={calculationResult} />
         <TableBlock
-          heading="Split · Per site"
-          italicAccent="spread"
-          deck="Each shipping point computed independently."
+          heading="分倉"
+          italicAccent="各倉獨立"
+          deck="每個出貨點獨立計算。"
           results={allSummary.results}
           mode="all"
         />
         <TableBlock
-          heading="Consolidated · Single"
-          italicAccent="warehouse"
-          deck="All sites pooled into one virtual warehouse."
+          heading="總倉"
+          italicAccent="集中"
+          deck="所有出貨點合併為一個虛擬總倉。"
           results={totalSummary.results}
           mode="total"
         />
@@ -55,9 +55,9 @@ export function ResultsTable() {
     <div className="mt-16">
       <ExportBar result={calculationResult} />
       <TableBlock
-        heading={calculationResult.mode === "total" ? "Consolidated" : "Per site"}
-        italicAccent="results"
-        deck="All SKUs that passed the minimum-months filter."
+        heading={calculationResult.mode === "total" ? "總倉" : "分倉"}
+        italicAccent="結果"
+        deck="所有通過最少期數篩選的料號。"
         results={calculationResult.results}
         mode={calculationResult.mode}
       />
@@ -171,20 +171,20 @@ function ExportBar({ result }: { result: CalculationResponse }) {
 
   return (
     <div className="border-t border-foreground/20 pt-6 flex flex-wrap items-center gap-6">
-      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Export</span>
+      <span className="font-sans text-[10px] tracking-[0.3em] text-muted-foreground">匯出</span>
 
       <button
         type="button"
         onClick={handleExportExcel}
         disabled={exporting !== null}
         className={cn(
-          "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+          "font-sans text-[11px] tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
           exporting === "excel"
             ? "text-accent border-accent"
             : "text-foreground border-foreground hover:text-accent hover:border-accent"
         )}
       >
-        {exporting === "excel" ? "Downloading..." : "Excel"}
+        {exporting === "excel" ? "下載中…" : "Excel"}
       </button>
 
       <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ function ExportBar({ result }: { result: CalculationResponse }) {
           onChange={(e) => setSapSite(e.target.value)}
           className="bg-transparent border-0 border-b border-foreground py-1 font-mono text-xs text-foreground appearance-none cursor-pointer focus:outline-none focus:border-accent transition-colors duration-500 ease-luxury pr-4"
         >
-          <option value="all">All sites</option>
+          <option value="all">全部出貨點</option>
           {availableSites.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -209,26 +209,26 @@ function ExportBar({ result }: { result: CalculationResponse }) {
             onClick={() => handleExportSap("all")}
             disabled={exporting !== null}
             className={cn(
-              "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+              "font-sans text-[11px] tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
               exporting === "sap"
                 ? "text-accent border-accent"
                 : "text-foreground border-foreground hover:text-accent hover:border-accent"
             )}
           >
-            SAP MM17 · Split
+            SAP MM17 · 分倉
           </button>
           <button
             type="button"
             onClick={() => handleExportSap("total")}
             disabled={exporting !== null}
             className={cn(
-              "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+              "font-sans text-[11px] tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
               exporting === "sap"
                 ? "text-accent border-accent"
                 : "text-foreground border-foreground hover:text-accent hover:border-accent"
             )}
           >
-            SAP MM17 · Consolidated
+            SAP MM17 · 總倉
           </button>
         </>
       ) : (
@@ -237,13 +237,13 @@ function ExportBar({ result }: { result: CalculationResponse }) {
           onClick={() => handleExportSap(result.mode === "total" ? "total" : "all")}
           disabled={exporting !== null}
           className={cn(
-            "font-sans text-[11px] uppercase tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
+            "font-sans text-[11px] tracking-[0.2em] pb-1 border-b transition-colors duration-500 ease-luxury",
             exporting === "sap"
               ? "text-accent border-accent"
               : "text-foreground border-foreground hover:text-accent hover:border-accent"
           )}
         >
-          {exporting === "sap" ? "Downloading..." : "SAP MM17"}
+          {exporting === "sap" ? "下載中…" : "SAP MM17"}
         </button>
       )}
     </div>
@@ -278,10 +278,10 @@ const STATUS_FILTERS: Array<{
   label: string;
   description: string;
 }> = [
-  { key: "all", label: "All", description: "Every SKU" },
-  { key: "red", label: "Shortage", description: "Below safety" },
-  { key: "green", label: "Healthy", description: "Within range" },
-  { key: "blue", label: "Overstock", description: "Above 3× SS" },
+  { key: "all", label: "全部", description: "所有料號" },
+  { key: "red", label: "缺貨", description: "低於安全庫存" },
+  { key: "green", label: "健康", description: "範圍內" },
+  { key: "blue", label: "過量", description: "超過 3 倍安全庫存" },
 ];
 
 function TableBlock({
@@ -431,9 +431,9 @@ function TableBlock({
     <section>
       {/* Heading */}
       <div className="border-t border-foreground/20 pt-6">
-        <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Table</span>
+        <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">表格</span>
         <h3 className="mt-2 font-serif text-3xl md:text-4xl leading-tight text-foreground">
-          {heading} <em className="italic text-accent">{italicAccent}.</em>
+          {heading}　<em className="italic text-accent">{italicAccent}</em>
         </h3>
         <p className="mt-2 font-sans text-sm text-muted-foreground max-w-xl">{deck}</p>
       </div>
@@ -454,65 +454,65 @@ function TableBlock({
             <tr>
               {mode === "all" ? (
                 <HeaderCell sortKey="site" sort={sort} onSort={onSort}>
-                  Site
+                  出貨點
                 </HeaderCell>
               ) : null}
               <HeaderCell sortKey="sku" sort={sort} onSort={onSort}>
-                SKU
+                料號
               </HeaderCell>
-              <HeaderCell sortKey={null}>Name</HeaderCell>
+              <HeaderCell sortKey={null}>品名</HeaderCell>
               <HeaderCell sortKey="abcClass" sort={sort} onSort={onSort} align="center">
                 ABC
               </HeaderCell>
               <HeaderCell sortKey="totalQty" sort={sort} onSort={onSort} align="right">
-                Total
+                總量
               </HeaderCell>
               <HeaderCell sortKey="meanDemand" sort={sort} onSort={onSort} align="right">
-                Mean
+                平均
               </HeaderCell>
               <HeaderCell sortKey="dailyDemand" sort={sort} onSort={onSort} align="right">
-                Daily
+                日均
               </HeaderCell>
               <HeaderCell sortKey="stdDev" sort={sort} onSort={onSort} align="right">
-                Std Dev
+                標準差
               </HeaderCell>
               <HeaderCell sortKey="cv" sort={sort} onSort={onSort} align="right">
                 CV
               </HeaderCell>
               <HeaderCell sortKey="safetyStock" sort={sort} onSort={onSort} align="right">
-                Safety
+                安全庫存
               </HeaderCell>
               <HeaderCell sortKey="reorderPoint" sort={sort} onSort={onSort} align="right">
                 ROP
               </HeaderCell>
               <HeaderCell sortKey="maxInventory" sort={sort} onSort={onSort} align="right">
-                Max
+                最大
               </HeaderCell>
               <HeaderCell sortKey="trendPct" sort={sort} onSort={onSort} align="right">
-                Trend
+                趨勢
               </HeaderCell>
               {hasPlanData ? (
                 <>
                   <HeaderCell sortKey="planStock" sort={sort} onSort={onSort} align="right">
-                    Stock
+                    庫存
                   </HeaderCell>
                   <HeaderCell sortKey="coverageDays" sort={sort} onSort={onSort} align="right">
-                    Coverage
+                    覆蓋
                   </HeaderCell>
                   <HeaderCell sortKey="suggestedOrder" sort={sort} onSort={onSort} align="right">
-                    Order
+                    建議下單
                   </HeaderCell>
                   <HeaderCell sortKey="gap" sort={sort} onSort={onSort} align="right">
-                    Gap
+                    缺口
                   </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
-                    Shortage
+                    缺貨月
                   </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
-                    Deadline
+                    截止日
                   </HeaderCell>
                   <HeaderCell sortKey={null} align="right">
-                    Turnover
+                    周轉
                   </HeaderCell>
                 </>
               ) : null}
@@ -525,7 +525,7 @@ function TableBlock({
                   colSpan={colCount}
                   className="py-20 text-center font-serif italic text-muted-foreground border-t border-foreground/10"
                 >
-                  No SKUs match the current filters.
+                  沒有符合篩選條件的料號。
                 </td>
               </tr>
             ) : pageSlice ? (
@@ -549,8 +549,8 @@ function TableBlock({
           pageSize={pageSize}
         />
       ) : (
-        <div className="mt-4 font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          {grouped ? `${itemCount} SKUs · ${filteredSorted.length} rows` : `${filteredSorted.length} rows`}
+        <div className="mt-4 font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
+          {grouped ? `${itemCount} 個料號 · ${filteredSorted.length} 列` : `${filteredSorted.length} 列`}
         </div>
       )}
     </section>
@@ -586,7 +586,7 @@ function SkuGroup({ group, hasPlanData = false }: { group: SkuGroupData; hasPlan
       >
         <td className="py-3 px-3">
           <span className="font-mono text-[10px] text-muted-foreground">
-            {collapsed ? "▸" : "▾"} {group.items.length} sites
+            {collapsed ? "▸" : "▾"} {group.items.length} 個出貨點
           </span>
         </td>
         <td className="py-3 px-3">
@@ -707,7 +707,7 @@ function ExpandableResultRow({
 function DemandDetail({ row }: { row: SkuResult }) {
   const values = row.monthlyValues;
   if (!values || values.length === 0) {
-    return <span className="font-serif italic text-sm text-muted-foreground">No period data available.</span>;
+    return <span className="font-serif italic text-sm text-muted-foreground">沒有期間資料。</span>;
   }
 
   const mean = row.meanDemand;
@@ -729,9 +729,7 @@ function DemandDetail({ row }: { row: SkuResult }) {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
         {/* Left: demand bar chart */}
         <div>
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Demand by period
-          </span>
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">各期需求</span>
           <div className="mt-3 flex items-end gap-[2px] h-16">
             {values.map((v, i) => {
               const h = Math.max(2, Math.round((v / maxVal) * 56));
@@ -765,23 +763,23 @@ function DemandDetail({ row }: { row: SkuResult }) {
 
         {/* Right: summary stats */}
         <div className="flex flex-col gap-3 min-w-[180px]">
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Summary</span>
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">摘要</span>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
-            <span className="text-muted-foreground">Mean</span>
+            <span className="text-muted-foreground">平均</span>
             <span className="text-right tabular-nums">{formatNumber(mean, 0)}</span>
-            <span className="text-muted-foreground">Std Dev</span>
+            <span className="text-muted-foreground">標準差</span>
             <span className="text-right tabular-nums">{formatNumber(row.stdDev, 0)}</span>
             <span className="text-muted-foreground">CV</span>
             <span className="text-right tabular-nums">{formatNumber(row.cv, 2)}</span>
-            <span className="text-muted-foreground">Safety Stock</span>
+            <span className="text-muted-foreground">安全庫存</span>
             <span className="text-right tabular-nums font-medium">{formatNumber(ss, 0)}</span>
             <span className="text-muted-foreground">ROP</span>
             <span className="text-right tabular-nums">{formatNumber(row.reorderPoint, 0)}</span>
-            <span className="text-muted-foreground">Max</span>
+            <span className="text-muted-foreground">最大</span>
             <span className="text-right tabular-nums">{formatNumber(row.maxInventory, 0)}</span>
-            <span className="text-muted-foreground">Periods</span>
+            <span className="text-muted-foreground">期數</span>
             <span className="text-right tabular-nums">{values.length}</span>
-            <span className="text-muted-foreground">Active</span>
+            <span className="text-muted-foreground">有效</span>
             <span className="text-right tabular-nums">{values.filter((v) => v > 0).length}</span>
           </div>
         </div>
@@ -790,27 +788,25 @@ function DemandDetail({ row }: { row: SkuResult }) {
       {/* Row 2: monthly stock projection (only when plan data exists) */}
       {hasPlanDetail ? (
         <div>
-          <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Stock projection
-          </span>
+          <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">庫存預測</span>
           <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8">
             {/* Left: projection table */}
             <div className="overflow-x-auto">
               <table className="w-full text-xs font-mono">
                 <thead>
                   <tr className="border-b border-foreground/10">
-                    <th className="py-1.5 pr-4 text-left text-muted-foreground font-normal">Month</th>
-                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Demand</th>
-                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Supply</th>
-                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Trfr In</th>
-                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Trfr Out</th>
-                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">Net</th>
-                    <th className="py-1.5 pl-3 text-right font-normal">Ending</th>
+                    <th className="py-1.5 pr-4 text-left text-muted-foreground font-normal">月份</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">需求</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">供應</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">調入</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">調出</th>
+                    <th className="py-1.5 px-3 text-right text-muted-foreground font-normal">淨變動</th>
+                    <th className="py-1.5 pl-3 text-right font-normal">期末</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-b border-foreground/5">
-                    <td className="py-1.5 pr-4 text-muted-foreground">Current</td>
+                    <td className="py-1.5 pr-4 text-muted-foreground">目前</td>
                     <td colSpan={5}></td>
                     <td className="py-1.5 pl-3 text-right tabular-nums font-medium">
                       {formatNumber(row.planStock ?? 0, 0)}
@@ -858,27 +854,25 @@ function DemandDetail({ row }: { row: SkuResult }) {
 
             {/* Right: plan summary */}
             <div className="flex flex-col gap-3 min-w-[180px]">
-              <span className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                Plan summary
-              </span>
+              <span className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">計畫摘要</span>
               <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs">
-                <span className="text-muted-foreground">Current Stock</span>
+                <span className="text-muted-foreground">目前庫存</span>
                 <span className="text-right tabular-nums">{formatNumber(row.planStock ?? 0, 0)}</span>
-                <span className="text-muted-foreground">Final Stock</span>
+                <span className="text-muted-foreground">期末庫存</span>
                 <span className="text-right tabular-nums">{formatNumber(row.finalStock ?? 0, 0)}</span>
-                <span className="text-muted-foreground">Min Stock</span>
+                <span className="text-muted-foreground">最低庫存</span>
                 <span className="text-right tabular-nums">{formatNumber(row.minStock ?? 0, 0)}</span>
                 {row.minStockMonth ? (
                   <>
-                    <span className="text-muted-foreground">Min Month</span>
+                    <span className="text-muted-foreground">最低月份</span>
                     <span className="text-right tabular-nums">{`${row.minStockMonth.slice(0, 4)}/${row.minStockMonth.slice(4)}`}</span>
                   </>
                 ) : null}
-                <span className="text-muted-foreground">Coverage</span>
+                <span className="text-muted-foreground">覆蓋天數</span>
                 <span className="text-right tabular-nums">
-                  {row.coverageDays != null ? `${formatNumber(row.coverageDays, 1)}d` : "—"}
+                  {row.coverageDays != null ? `${formatNumber(row.coverageDays, 1)} 天` : "—"}
                 </span>
-                <span className="text-muted-foreground">Gap</span>
+                <span className="text-muted-foreground">缺口</span>
                 <span
                   className={cn("text-right tabular-nums", (row.gap ?? 0) < 0 && "text-[color:var(--color-shortage)]")}
                 >
@@ -916,7 +910,7 @@ function HeaderCell({
     <th
       scope="col"
       className={cn(
-        "py-3 px-3 font-sans text-[10px] uppercase tracking-[0.25em] text-muted-foreground select-none",
+        "py-3 px-3 font-sans text-[10px] tracking-[0.25em] text-muted-foreground select-none",
         "border-b border-foreground/30",
         clickable && "cursor-pointer hover:text-foreground transition-colors duration-300",
         align === "right" && "text-right",
@@ -998,7 +992,7 @@ function AbcBadge({ cls, priceMissing }: { cls: "A" | "B" | "C"; priceMissing?: 
         bg,
         priceMissing && "border border-dashed border-foreground/40"
       )}
-      title={priceMissing ? "Classified by quantity (no price data)" : undefined}
+      title={priceMissing ? "依數量分級（無單價資料）" : undefined}
     >
       {cls}
     </span>
@@ -1031,7 +1025,7 @@ function StatusTabs({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            <span className="block font-sans text-[10px] uppercase tracking-[0.3em]">{f.description}</span>
+            <span className="block font-sans text-[10px] tracking-[0.3em]">{f.description}</span>
             <span className="mt-1 block font-serif text-xl leading-none">
               {f.label} <span className="font-mono text-xs text-muted-foreground">{count}</span>
             </span>
@@ -1045,7 +1039,7 @@ function StatusTabs({
 function SiteDropdown({ sites, value, onChange }: { sites: string[]; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Site</label>
+      <label className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">出貨點</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -1055,7 +1049,7 @@ function SiteDropdown({ sites, value, onChange }: { sites: string[]; value: stri
           "focus:outline-none focus:border-accent transition-colors duration-500 ease-luxury"
         )}
       >
-        <option value="all">All sites</option>
+        <option value="all">全部出貨點</option>
         {sites.map((s) => (
           <option key={s} value={s}>
             {s}
@@ -1069,10 +1063,10 @@ function SiteDropdown({ sites, value, onChange }: { sites: string[]; value: stri
 function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Search</label>
+      <label className="block font-sans text-[10px] tracking-[0.3em] text-muted-foreground">搜尋</label>
       <input
         type="search"
-        placeholder="SKU or product name"
+        placeholder="料號或品名"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
@@ -1103,8 +1097,8 @@ function Pagination({
 
   return (
     <div className="mt-6 flex items-center justify-between gap-4 border-t border-foreground/10 pt-4">
-      <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        {start}–{end} of {totalItems}
+      <div className="font-sans text-[10px] tracking-[0.3em] text-muted-foreground">
+        第 {start}–{end} 列，共 {totalItems} 列
       </div>
       <div className="flex items-center gap-2">
         <PageBtn disabled={page <= 1} onClick={() => onChange(page - 1)}>
