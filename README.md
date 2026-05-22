@@ -2,6 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+After cloning, install the pre-commit hooks (一次性，會把 `scripts/pre-commit` 複製到 `.git/hooks/`)：
+
+```bash
+bash scripts/install-hooks.sh
+```
+
+Pre-commit 會在每次 `git commit` 前自動跑 `prettier --check`、`eslint`、`tsc --noEmit`。
+
 First, run the development server:
 
 ```bash
