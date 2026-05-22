@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { ApiClientError, api } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { useTabContext } from "@/components/layout/TabbedLayout";
 import { useWorkflow } from "@/lib/workflow-context";
 
 /**
@@ -21,6 +22,7 @@ export function CalculateBar() {
     setCalculationError,
     setCalculationResult,
   } = useWorkflow();
+  const { setActiveTab } = useTabContext();
 
   const hasSales = Boolean(uploads.sales?.fileId);
   const hasSelectedMonths = (parameters.selectedMonths?.length ?? 0) > 0;
@@ -43,6 +45,13 @@ export function CalculateBar() {
     setCalculationError(null);
     setCalculating(true);
 
+    // 立刻切到分析分頁，使用者立即看到 loading skeleton 或舊結果疊 overlay。
+    // API 失敗時會自動切回 configuration 分頁（見下方 catch）讓使用者看到錯誤訊息。
+    setActiveTab("analysis");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     try {
       const result = await api.calculate({
         salesFileId: uploads.sales!.fileId,
@@ -52,13 +61,6 @@ export function CalculateBar() {
       });
 
       setCalculationResult(result);
-
-      requestAnimationFrame(() => {
-        document.getElementById("analysis")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
     } catch (err) {
       if (err instanceof ApiClientError) {
         setCalculationError(`[${err.code}] ${err.message}`);
@@ -67,6 +69,9 @@ export function CalculateBar() {
       } else {
         setCalculationError((err as Error).message || "計算失敗");
       }
+      // 錯誤路徑：切回 configuration 分頁讓使用者看到錯誤訊息與重試入口。
+      // AbortError 也切回（使用者連點觸發的舊請求被取消，回到設定頁無妨）。
+      setActiveTab("configuration");
     } finally {
       setCalculating(false);
     }
@@ -76,6 +81,7 @@ export function CalculateBar() {
     uploads.sales,
     uploads.price,
     uploads.plan,
+    setActiveTab,
     setCalculating,
     setCalculationError,
     setCalculationResult,
@@ -88,7 +94,7 @@ export function CalculateBar() {
       : isCalculating
         ? "計算中…"
         : calculationResult
-          ? "下方已有結果，可重新計算。"
+          ? "已有結果，可重新計算。"
           : "設定完成，請按計算。";
 
   return (
