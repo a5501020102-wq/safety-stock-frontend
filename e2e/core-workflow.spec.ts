@@ -74,6 +74,9 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
   });
 
   test("should toggle months selection", async () => {
+    // configuration tab 預設不 visible（active=sources），點內部 button 前先切 tab
+    await home.activateTab("configuration");
+
     // 季節性過濾在「進階」展開內
     const seasonalToggle = home.page.locator("button").filter({ hasText: /季節性過濾/ });
     if (await seasonalToggle.isVisible()) {
@@ -108,6 +111,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
 
   test("should disable calculate button when no months selected", async () => {
     await home.uploadSalesFile(SALES_FILE);
+    await home.activateTab("configuration");
 
     const seasonalToggle = home.page.locator("button").filter({ hasText: /季節性過濾/ });
     if (await seasonalToggle.isVisible()) {
@@ -242,6 +246,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
   // =========================================================================
 
   test("should open and close advanced panel", async () => {
+    await home.activateTab("configuration");
     await home.page.waitForTimeout(2_000);
 
     if (await home.advancedToggle.isVisible()) {
