@@ -128,13 +128,31 @@ export class HomePage {
 
   async goto() {
     await this.page.goto("/");
-    await this.page.waitForLoadState("networkidle");
+    // 改用 "load"：Next.js 16 dev/prod build 有持續 network activity
+    // （prefetch、background fetch），networkidle 在 CI 易卡 30s timeout
+    await this.page.waitForLoadState("load");
   }
 
   async clearLocalStorage() {
     await this.page.evaluate(() => localStorage.clear());
     await this.page.reload();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForLoadState("load");
+  }
+
+  /**
+   * 確保指定 tab 為 active（panel visible）。
+   * Tab 重構後，configuration / analysis tab 預設不可見（display:none），
+   * 點擊內部元素前必須先切 tab。
+   * 如果已經 active 則跳過點擊（避免無謂 click）。
+   */
+  async activateTab(id: "sources" | "configuration" | "analysis") {
+    const panel = this.page.locator(`section#${id}`);
+    const isActive = await panel.evaluate((el) => el.classList.contains("tab-panel-active"));
+    if (isActive) return;
+    // Desktop tab nav 用 tab id（tab-sources / tab-configuration / tab-analysis）
+    await this.page.locator(`button#tab-${id}`).click();
+    // 等 panel 切到 active class（fade-in 動畫 400ms）
+    await expect(panel).toHaveClass(/tab-panel-active/, { timeout: 5_000 });
   }
 
   async uploadSalesFile(filePath: string) {
@@ -145,6 +163,7 @@ export class HomePage {
   }
 
   async clickCalculate() {
+    await this.activateTab("configuration");
     await expect(this.calculateBtn).toBeEnabled();
     await this.calculateBtn.click();
   }
@@ -155,24 +174,29 @@ export class HomePage {
   }
 
   async setLeadTime(days: number) {
+    await this.activateTab("configuration");
     await this.leadTimeInput.fill(String(days));
   }
 
   async setMinMonths(months: number) {
+    await this.activateTab("configuration");
     await this.minMonthsInput.fill(String(months));
   }
 
   async selectCalcMode(mode: "compare" | "all" | "total") {
+    await this.activateTab("configuration");
     const label = this.page.locator(`label:has(input[name="calcMode"][value="${mode}"])`);
     await label.click();
   }
 
   async selectGranularity(gran: "monthly" | "weekly" | "daily") {
+    await this.activateTab("configuration");
     const label = this.page.locator(`label:has(input[name="granularity"][value="${gran}"])`);
     await label.click();
   }
 
   async toggleMonth(monthName: string) {
+    await this.activateTab("configuration");
     await this.page
       .locator(`label`)
       .filter({ hasText: new RegExp(`^\\d+\\s*${monthName}$`, "i") })

@@ -74,6 +74,9 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
   });
 
   test("should toggle months selection", async () => {
+    // configuration tab 預設不 visible（active=sources），點內部 button 前先切 tab
+    await home.activateTab("configuration");
+
     // 季節性過濾在「進階」展開內
     const seasonalToggle = home.page.locator("button").filter({ hasText: /季節性過濾/ });
     if (await seasonalToggle.isVisible()) {
@@ -108,6 +111,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
 
   test("should disable calculate button when no months selected", async () => {
     await home.uploadSalesFile(SALES_FILE);
+    await home.activateTab("configuration");
 
     const seasonalToggle = home.page.locator("button").filter({ hasText: /季節性過濾/ });
     if (await seasonalToggle.isVisible()) {
@@ -201,10 +205,14 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     // In total mode, rows are flat (no grouping). Click first row.
     await home.clickResultRow(0);
 
-    const detail = home.analysisSection.locator("text=各期需求");
+    // 列展開動畫實作為「永久 render + max-height transition」，
+    // 所以 'text=各期需求' 在 50 個 row 各有一份（hidden）。
+    // 用 .row-detail-open 限定到「展開的那一列」（只有點開的有此 class）。
+    const detail = home.analysisSection.locator(".row-detail-open").locator("text=各期需求");
     await expect(detail).toBeVisible();
 
     await home.clickResultRow(0);
+    // 再點一次收合 → .row-detail-open class 移除 → selector 0 個元素 → not visible
     await expect(detail).not.toBeVisible();
   });
 
@@ -242,6 +250,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
   // =========================================================================
 
   test("should open and close advanced panel", async () => {
+    await home.activateTab("configuration");
     await home.page.waitForTimeout(2_000);
 
     if (await home.advancedToggle.isVisible()) {
@@ -262,7 +271,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     await home.selectGranularity("weekly");
 
     await home.page.reload();
-    await home.page.waitForLoadState("networkidle");
+    await home.page.waitForLoadState("load");
 
     await expect(home.leadTimeInput).toHaveValue("45");
     await expect(home.granularityWeekly).toBeChecked();
@@ -306,7 +315,7 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
 
     // 重新整理頁面（hash 保留）→ 分析 tab 仍為 active
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     await expect(page.getByRole("tablist", { name: "主要區段" }).getByRole("tab", { name: /分析/ })).toHaveAttribute(
       "aria-selected",
       "true"
