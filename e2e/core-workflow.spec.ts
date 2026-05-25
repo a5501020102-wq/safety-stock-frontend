@@ -205,10 +205,14 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     // In total mode, rows are flat (no grouping). Click first row.
     await home.clickResultRow(0);
 
-    const detail = home.analysisSection.locator("text=各期需求");
+    // 列展開動畫實作為「永久 render + max-height transition」，
+    // 所以 'text=各期需求' 在 50 個 row 各有一份（hidden）。
+    // 用 .row-detail-open 限定到「展開的那一列」（只有點開的有此 class）。
+    const detail = home.analysisSection.locator(".row-detail-open").locator("text=各期需求");
     await expect(detail).toBeVisible();
 
     await home.clickResultRow(0);
+    // 再點一次收合 → .row-detail-open class 移除 → selector 0 個元素 → not visible
     await expect(detail).not.toBeVisible();
   });
 
