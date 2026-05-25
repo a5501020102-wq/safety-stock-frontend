@@ -7,8 +7,8 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  // 暫時 retries=0：debug CI hang 期間不浪費時間 retry
-  retries: 0,
+  // CI 允許 1 次 retry（偶爾的 flake 不該卡 PR）
+  retries: process.env.CI ? 1 : 0,
   workers: 1,
   // 雙 reporter：list 提供 streaming 進度（CI 上看哪個 test 卡住），github 提供 annotation
   reporter: process.env.CI ? [["list"], ["github"]] : "html",

@@ -9,9 +9,8 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    # 暫時縮短到 8 分鐘，逼提早出 partial 結果（5/12 baseline 跑 7:35 跑完）
-    # CI 穩定後改回 15-25
-    timeout-minutes: 8
+    # 35 個 test 實測跑 41.9s（含 setup 約 5 分鐘）。15 分鐘預留 retry 緩衝。
+    timeout-minutes: 15
 
     steps:
       - name: Checkout frontend
@@ -93,8 +92,7 @@ jobs:
           cp safety-stock-automation/data/material_master.json data/ || true
 
       - name: Run E2E tests
-        # debug CI hang：第一個 fail 就停（不浪費時間 retry），快速取得 list reporter 進度
-        run: npx playwright test --max-failures=1
+        run: npx playwright test
         env:
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:5000
