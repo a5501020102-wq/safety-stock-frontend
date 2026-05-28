@@ -364,6 +364,43 @@ function TableBlock({
     return c;
   }, [results]);
 
+  // Sort comparator（filteredSorted 與 grouped 共用，讓 split 分組模式排序也生效）
+  const gran = parameters?.granularity ?? "monthly";
+  const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters?.workingDaysPerMonth ?? 30);
+
+  const getSortValue = useCallback(
+    (r: SkuResult, key: SortKey): number | string | null => {
+      if (key === "dailyDemand") return r.meanDemand > 0 ? r.meanDemand / dpp : 0;
+      if (key === "trendPct") return r.trendPct ?? null;
+      if (key === "coverageDays") return r.coverageDays ?? null;
+      if (key === "gap") return r.gap ?? null;
+      // 需求型態按邏輯權重排序（穩定<波動<零星<雜亂），"—" 視為無值排最後
+      if (key === "demandPattern") {
+        const w = PATTERN_SORT_WEIGHT[r.demandPattern ?? ""];
+        return w === undefined ? null : w;
+      }
+      if (key === "adi") return r.adi ?? null;
+      return r[key] as number | string;
+    },
+    [dpp]
+  );
+
+  const compareRows = useCallback(
+    (a: SkuResult, b: SkuResult): number => {
+      const av = getSortValue(a, sort.key);
+      const bv = getSortValue(b, sort.key);
+      // Nulls go last
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      if (av === bv) return 0;
+      const dir = sort.dir === "asc" ? 1 : -1;
+      if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    },
+    [getSortValue, sort]
+  );
+
   // Pipeline: site -> status -> search -> sort -> paginate
   const filteredSorted = useMemo(() => {
     let list = results;
@@ -377,40 +414,8 @@ function TableBlock({
       const q = query.trim().toLowerCase();
       list = list.filter((r) => r.sku.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q));
     }
-    // Sort (immutable: clone before sorting)
-    const gran = parameters?.granularity ?? "monthly";
-    const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters?.workingDaysPerMonth ?? 30);
-
-    const getSortValue = (r: SkuResult, key: SortKey): number | string | null => {
-      if (key === "dailyDemand") return r.meanDemand > 0 ? r.meanDemand / dpp : 0;
-      if (key === "trendPct") return r.trendPct ?? null;
-      if (key === "coverageDays") return r.coverageDays ?? null;
-      if (key === "gap") return r.gap ?? null;
-      // 需求型態按邏輯權重排序（穩定<波動<零星<雜亂），"—" 視為無值排最後
-      if (key === "demandPattern") {
-        const w = PATTERN_SORT_WEIGHT[r.demandPattern ?? ""];
-        return w === undefined ? null : w;
-      }
-      if (key === "adi") return r.adi ?? null;
-      return r[key] as number | string;
-    };
-
-    const sorted = [...list].sort((a, b) => {
-      const av = getSortValue(a, sort.key);
-      const bv = getSortValue(b, sort.key);
-      // Nulls go last
-      if (av === null && bv === null) return 0;
-      if (av === null) return 1;
-      if (bv === null) return -1;
-      if (av === bv) return 0;
-      const dir = sort.dir === "asc" ? 1 : -1;
-      if (typeof av === "number" && typeof bv === "number") {
-        return (av - bv) * dir;
-      }
-      return String(av).localeCompare(String(bv)) * dir;
-    });
-    return sorted;
-  }, [results, siteFilter, statusFilter, query, sort, showSiteFilter, parameters]);
+    return [...list].sort(compareRows);
+  }, [results, siteFilter, statusFilter, query, compareRows, showSiteFilter]);
 
   // For split mode: group by SKU for display
   const grouped = useMemo(() => {
@@ -421,18 +426,26 @@ function TableBlock({
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(r);
     }
-    // Sort groups by sum of totalQty desc
-    return Array.from(map.entries())
-      .map(([sku, items]) => ({
-        sku,
-        name: items[0].name,
-        abcClass: items[0].abcClass,
-        isPriceMissing: items[0].isPriceMissing,
-        totalQty: items.reduce((s, r) => s + r.totalQty, 0),
-        items: items.sort((a, b) => b.totalQty - a.totalQty),
-      }))
-      .sort((a, b) => b.totalQty - a.totalQty);
-  }, [filteredSorted, mode]);
+    return (
+      Array.from(map.entries())
+        .map(([sku, items]) => ({
+          sku,
+          name: items[0].name,
+          abcClass: items[0].abcClass,
+          isPriceMissing: items[0].isPriceMissing,
+          totalQty: items.reduce((s, r) => s + r.totalQty, 0),
+          // group 內依當前排序欄（clone 避免 mutate filteredSorted 子陣列）
+          items: [...items].sort(compareRows),
+        }))
+        // group 間：totalQty 用加總（保留原語意 + 支援升降）；其他欄用各 group 排序後第一個 item 當代表
+        .sort((ga, gb) => {
+          if (sort.key === "totalQty") {
+            return sort.dir === "asc" ? ga.totalQty - gb.totalQty : gb.totalQty - ga.totalQty;
+          }
+          return compareRows(ga.items[0], gb.items[0]);
+        })
+    );
+  }, [filteredSorted, mode, compareRows, sort]);
 
   // Pagination: count by groups (split) or rows (total/single)
   const itemCount = grouped ? grouped.length : filteredSorted.length;

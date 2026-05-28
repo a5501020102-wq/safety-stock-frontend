@@ -234,6 +234,15 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     await expect(patternHeader).toBeVisible();
     await patternHeader.click();
     await expect(patternHeader.locator(".text-accent")).toBeVisible();
+
+    // 回應 codex bot：split 分組模式下排序需真的重排列順序（不只指示器箭頭）。
+    // 用安全庫存（數值欄）切 asc/desc，第一列內容應改變。
+    const firstRow = home.analysisSection.locator("table tbody tr:not([data-row-detail])").first();
+    await safetyHeader.click();
+    const firstAsc = await firstRow.textContent();
+    await safetyHeader.click();
+    const firstDesc = await firstRow.textContent();
+    expect(firstAsc).not.toBe(firstDesc);
   });
 
   // =========================================================================
