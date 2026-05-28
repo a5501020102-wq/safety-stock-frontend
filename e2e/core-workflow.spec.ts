@@ -228,6 +228,12 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
 
     // Should show sort indicator
     await expect(safetyHeader.locator(".text-accent")).toBeVisible();
+
+    // 需求型態欄應渲染且可排序（demand pattern 功能）
+    const patternHeader = home.analysisSection.locator("th").filter({ hasText: "需求型態" });
+    await expect(patternHeader).toBeVisible();
+    await patternHeader.click();
+    await expect(patternHeader.locator(".text-accent")).toBeVisible();
   });
 
   // =========================================================================

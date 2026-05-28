@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { useWorkflow } from "@/lib/workflow-context";
-import type { CalculationResponse, SkuResult, StockStatus } from "@/lib/types";
+import type { CalculationResponse, DemandPattern, SkuResult, StockStatus } from "@/lib/types";
 
 /**
  * ResultsTable
@@ -263,6 +263,8 @@ type SortKey =
   | "dailyDemand"
   | "stdDev"
   | "cv"
+  | "demandPattern"
+  | "adi"
   | "safetyStock"
   | "reorderPoint"
   | "maxInventory"
@@ -272,6 +274,20 @@ type SortKey =
   | "coverageDays"
   | "gap";
 type SortDir = "asc" | "desc";
+
+// 需求型態：排序權重（穩定→雜亂）與中文/配色（莫蘭迪色票）
+const PATTERN_SORT_WEIGHT: Record<string, number> = {
+  smooth: 0,
+  erratic: 1,
+  intermittent: 2,
+  lumpy: 3,
+};
+const PATTERN_META: Record<string, { label: string; color: string }> = {
+  smooth: { label: "穩定", color: "var(--color-healthy)" },
+  erratic: { label: "波動", color: "var(--color-accent)" },
+  intermittent: { label: "零星", color: "var(--color-overstock)" },
+  lumpy: { label: "雜亂", color: "var(--color-neutral)" },
+};
 
 const STATUS_FILTERS: Array<{
   key: "all" | StockStatus;
@@ -370,6 +386,12 @@ function TableBlock({
       if (key === "trendPct") return r.trendPct ?? null;
       if (key === "coverageDays") return r.coverageDays ?? null;
       if (key === "gap") return r.gap ?? null;
+      // 需求型態按邏輯權重排序（穩定<波動<零星<雜亂），"—" 視為無值排最後
+      if (key === "demandPattern") {
+        const w = PATTERN_SORT_WEIGHT[r.demandPattern ?? ""];
+        return w === undefined ? null : w;
+      }
+      if (key === "adi") return r.adi ?? null;
       return r[key] as number | string;
     };
 
@@ -420,7 +442,7 @@ function TableBlock({
   const pageSlice = grouped ? grouped.slice(start, start + pageSize) : null;
   const flatPageSlice = grouped ? null : filteredSorted.slice(start, start + pageSize);
   const planExtraCols = hasPlanData ? 7 : 0;
-  const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
+  const colCount = (mode === "all" ? 15 : 14) + planExtraCols;
 
   const onSort = (key: SortKey) => {
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }));
@@ -478,6 +500,12 @@ function TableBlock({
               </HeaderCell>
               <HeaderCell sortKey="cv" sort={sort} onSort={onSort} align="right">
                 CV
+              </HeaderCell>
+              <HeaderCell sortKey="demandPattern" sort={sort} onSort={onSort} align="center">
+                需求型態
+              </HeaderCell>
+              <HeaderCell sortKey="adi" sort={sort} onSort={onSort} align="right">
+                ADI
               </HeaderCell>
               <HeaderCell sortKey="safetyStock" sort={sort} onSort={onSort} align="right">
                 安全庫存
@@ -603,7 +631,7 @@ function SkuGroup({ group, hasPlanData = false }: { group: SkuGroupData; hasPlan
             {formatNumber(group.totalQty, 0)}
           </span>
         </td>
-        <td colSpan={8} className="py-3 px-3" />
+        <td colSpan={10} className="py-3 px-3" />
       </tr>
       {/* Site rows within group */}
       {!collapsed &&
@@ -628,7 +656,7 @@ function ExpandableResultRow({
   const { parameters } = useWorkflow();
   const [expanded, setExpanded] = useState(false);
   const planExtraCols = hasPlanData ? 7 : 0;
-  const colCount = (mode === "all" ? 13 : 12) + planExtraCols;
+  const colCount = (mode === "all" ? 15 : 14) + planExtraCols;
 
   const gran = parameters.granularity ?? "monthly";
   const dpp = gran === "daily" ? 1 : gran === "weekly" ? 7 : (parameters.workingDaysPerMonth ?? 30);
@@ -665,6 +693,10 @@ function ExpandableResultRow({
         <NumericCell value={dailyDemand} decimals={0} />
         <NumericCell value={row.stdDev} decimals={0} />
         <NumericCell value={row.cv} decimals={2} />
+        <Cell align="center">
+          <PatternBadge pattern={row.demandPattern} adi={row.adi} cv2={row.cvSquared} />
+        </Cell>
+        <NumericCell value={row.adi ?? null} decimals={2} />
         <NumericCell value={row.safetyStock} decimals={0} bold statusTone={row.status} />
         <NumericCell value={row.reorderPoint} decimals={0} />
         <NumericCell value={row.maxInventory} decimals={0} />
@@ -996,6 +1028,24 @@ function AbcBadge({ cls, priceMissing }: { cls: "A" | "B" | "C"; priceMissing?: 
       title={priceMissing ? "依數量分級（無單價資料）" : undefined}
     >
       {cls}
+    </span>
+  );
+}
+
+function PatternBadge({ pattern, adi, cv2 }: { pattern?: DemandPattern; adi?: number | null; cv2?: number | null }) {
+  const meta = pattern ? PATTERN_META[pattern] : undefined;
+  if (!meta) {
+    return <span className="font-mono text-xs text-muted-foreground">—</span>;
+  }
+  const title =
+    `ADI ${adi != null ? adi.toFixed(2) : "—"} · ` + `CV² ${cv2 != null ? cv2.toFixed(2) : "—"}（依當前篩選範圍計算）`;
+  return (
+    <span
+      className="inline-flex items-center justify-center px-2 py-0.5 rounded-full font-sans text-[11px] font-medium text-background"
+      style={{ backgroundColor: meta.color }}
+      title={title}
+    >
+      {meta.label}
     </span>
   );
 }
