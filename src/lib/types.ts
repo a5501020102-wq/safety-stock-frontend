@@ -69,7 +69,15 @@ export interface SkuResult {
   // 週模式日數據統計
   dataPointCount?: number;
   dataPointWarning?: string | null;
+
+  // 需求型態分類（Syntetos-Boylan，僅月粒度有值）
+  demandPattern?: DemandPattern;
+  adi?: number | null;
+  cvSquared?: number | null;
 }
+
+// 需求型態：smooth 穩定 / erratic 波動 / intermittent 零星 / lumpy 雜亂 / "—" 不適用
+export type DemandPattern = "smooth" | "erratic" | "intermittent" | "lumpy" | "—";
 
 export interface MonthlyPlanResult {
   month: string;
