@@ -354,7 +354,7 @@ page.tsx
 | Component | Platform | Branch | Auto-deploy |
 |-----------|----------|--------|-------------|
 | Frontend | Vercel | `main` | On push |
-| Backend | Render (Free) | `feature/stateless-api` | On push |
+| Backend | Render (Free) | `main` | On push |
 
 ### Environment Variables
 
