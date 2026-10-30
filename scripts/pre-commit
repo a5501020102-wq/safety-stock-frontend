@@ -4,6 +4,7 @@
 # 1. prettier --check    格式檢查
 # 2. eslint              lint 檢查
 # 3. tsc --noEmit        型別檢查
+# 4. web/ checkJs 與 node --test
 #
 # 安裝：bash scripts/install-hooks.sh
 # 跳過：commit 時加 --no-verify（不建議，僅緊急時使用）
@@ -49,6 +50,16 @@ cd "$REPO_ROOT" && npx tsc --noEmit 2>/dev/null
 if [ $? -ne 0 ]; then
     echo "[pre-commit] tsc found type errors. Commit aborted."
     echo "Run 'npx tsc --noEmit' to see details."
+    exit 1
+fi
+
+# ----------------------------------------------------------
+# 4. web/ 型別檢查（JSDoc + checkJs）與單元測試
+# ----------------------------------------------------------
+echo "[pre-commit] web typecheck + unit tests..."
+cd "$REPO_ROOT" && npm run --silent web:typecheck && npm run --silent web:test >/dev/null
+if [ $? -ne 0 ]; then
+    echo "[pre-commit] web checks failed. Run 'npm run web:typecheck' and 'npm run web:test'."
     exit 1
 fi
 

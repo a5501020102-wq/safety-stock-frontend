@@ -1,44 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 安全庫存計算系統 — 前端
 
-## Getting Started
+純 HTML / CSS / JavaScript（ES modules），不需要建置步驟，部署為 Vercel 靜態網站。
+後端 API 在 `safety-stock-automation`（Flask，部署於 Render）。
 
-After cloning, install the pre-commit hooks (一次性，會把 `scripts/pre-commit` 複製到 `.git/hooks/`)：
+> 舊版 Next.js 前端（`src/`）仍在 repo 中，待功能對等確認後移除。
 
-```bash
-bash scripts/install-hooks.sh
-```
-
-Pre-commit 會在每次 `git commit` 前自動跑 `prettier --check`、`eslint`、`tsc --noEmit`。
-
-First, run the development server:
+## 開發
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bash scripts/install-hooks.sh   # 一次性：安裝 pre-commit
+npm install                     # 只為了開發工具（TypeScript、ESLint、Playwright）；web/ 本身沒有相依套件
+npm run web:dev                 # http://localhost:3000，需另外啟動後端 http://localhost:5000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| 指令                    | 用途                                           |
+| ----------------------- | ---------------------------------------------- |
+| `npm run web:dev`       | 本機靜態伺服器（含與正式環境相同的 CSP 標頭）  |
+| `npm run web:typecheck` | JSDoc 型別檢查（`tsc --checkJs`，strict）      |
+| `npm run web:test`      | 純邏輯單元測試（`node --test`）                |
+| `npm run test:e2e`      | Playwright E2E（自動啟動前後端）               |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Pre-commit 會跑 prettier、eslint、tsc 與上述 web 檢查。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 結構
 
-## Learn More
+```
+web/
+  index.html          頁面骨架與三個分頁區段
+  config.js           API 網址（部署時由 scripts/write-config.mjs 依 SS_API_URL 產生）
+  css/                tokens（顏色、間距、深色模式）→ base → layout → sections → results
+  js/
+    main.js           進入點：建立 store、掛載各區段
+    api/              後端 API 客戶端與型別宣告（types.d.ts）
+    state/            store（訂閱式狀態容器）與工作流程狀態、localStorage 保存
+    utils/            DOM 建構、格式化、文字對照、結果表格的篩選排序分頁（純函式）
+    components/       各區段元件；元件之間不互相呼叫，只透過 store 溝通
+  tests/              node --test 單元測試
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 安全
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 所有來自資料的文字都以 text node 寫入；ESLint 禁止 `innerHTML` / `outerHTML` / `insertAdjacentHTML`
+- `vercel.json` 設定 Content-Security-Policy：只允許本站腳本與樣式，API 只能連到 `*.onrender.com`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 部署（Vercel）
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`vercel.json` 已設定：不安裝套件、build 只產生 `web/config.js`、輸出目錄為 `web/`。
+Vercel 專案需設定環境變數 `SS_API_URL`（例如 `https://safety-stock-automation.onrender.com`），
+未設定時 build 會失敗，Vercel 會保留前一版部署，不會上線一個連不到後端的版本。
