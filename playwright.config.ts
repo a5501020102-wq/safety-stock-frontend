@@ -42,7 +42,7 @@ export default defineConfig({
           timeout: 30_000,
         },
         {
-          command: "npm run dev",
+          command: "npm run web:dev",
           port: 3000,
           reuseExistingServer: true,
           timeout: 30_000,
