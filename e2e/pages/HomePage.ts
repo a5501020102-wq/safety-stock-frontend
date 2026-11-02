@@ -90,7 +90,7 @@ export class HomePage {
     // Months
     this.selectAllMonthsBtn = page.getByRole("button", { name: /^全選$/ });
     this.clearMonthsBtn = page.locator("section#configuration").getByRole("button", { name: /^清除$/ });
-    this.monthsCounter = page.locator("span.font-mono.tabular-nums").filter({ hasText: "/ 12" });
+    this.monthsCounter = page.locator('[data-role="months-counter"]');
 
     // Advanced — 分類前置期 toggle
     this.advancedToggle = page.locator("button").filter({ hasText: /分類前置期/ });
@@ -104,16 +104,15 @@ export class HomePage {
     this.calculateBtn = page.locator("section#configuration button").filter({
       hasText: /計算/,
     });
-    // CalculateBar 的 reason 訊息（顯示「請先上傳銷貨明細。」「計算中…」「已有結果」等）
-    // 結構：<p className="mt-3 font-serif text-xl ...">{reason}</p>，是 configuration 內唯一的 p.font-serif.text-xl
-    this.calculateStatus = page.locator("section#configuration p.font-serif.text-xl").first();
-    this.calculateError = page.locator('[class*="color-shortage"]').filter({ hasText: /\[/ });
+    // 計算列的狀態說明（「請先上傳銷貨明細。」「計算中…」「已有結果」等）與錯誤訊息
+    this.calculateStatus = page.locator("section#configuration .calc-reason");
+    this.calculateError = page.locator("section#configuration .calc-error");
 
     // Analysis
     this.analysisSection = page.locator("section#analysis");
     this.parameterSnapshot = this.analysisSection.locator("dl").first();
 
-    // Status tabs — STATUS_FILTERS description 文字
+    // Status tabs — 依狀態分頁的說明文字
     this.statusTabAll = this.analysisSection.getByRole("button", { name: /所有料號/ });
     this.statusTabShortage = this.analysisSection.getByRole("button", { name: /低於安全庫存/ });
     this.statusTabHealthy = this.analysisSection.getByRole("button", { name: /範圍內/ });
@@ -121,15 +120,14 @@ export class HomePage {
 
     // Table controls
     this.searchInput = this.analysisSection.locator('input[type="search"]');
-    this.siteFilter = this.analysisSection.locator("select").first();
+    this.siteFilter = this.analysisSection.getByRole("combobox", { name: "篩選出貨點" }).first();
   }
 
   // --- Actions ---
 
   async goto() {
     await this.page.goto("/");
-    // 改用 "load"：Next.js 16 dev/prod build 有持續 network activity
-    // （prefetch、background fetch），networkidle 在 CI 易卡 30s timeout
+    // 用 "load" 而非 networkidle：物料主檔請求在後端休眠時可能很慢
     await this.page.waitForLoadState("load");
   }
 
@@ -141,7 +139,7 @@ export class HomePage {
 
   /**
    * 確保指定 tab 為 active（panel visible）。
-   * Tab 重構後，configuration / analysis tab 預設不可見（display:none），
+   * configuration / analysis tab 預設不可見（display:none），
    * 點擊內部元素前必須先切 tab。
    * 如果已經 active 則跳過點擊（避免無謂 click）。
    */
@@ -151,7 +149,7 @@ export class HomePage {
     if (isActive) return;
     // Desktop tab nav 用 tab id（tab-sources / tab-configuration / tab-analysis）
     await this.page.locator(`button#tab-${id}`).click();
-    // 等 panel 切到 active class（fade-in 動畫 400ms）
+    // 等 panel 切到 active class
     await expect(panel).toHaveClass(/tab-panel-active/, { timeout: 5_000 });
   }
 
@@ -204,7 +202,7 @@ export class HomePage {
   }
 
   async getResultsRowCount(): Promise<number> {
-    // 排除 detail row（永久 render 但 collapsed 時被 max-height:0 截斷不可見）
+    // 排除展開明細列（data-row-detail）
     return this.analysisSection.locator("table tbody tr:not([data-row-detail])").count();
   }
 

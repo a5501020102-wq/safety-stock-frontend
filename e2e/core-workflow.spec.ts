@@ -202,12 +202,10 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     await home.clickCalculate();
     await home.waitForResults();
 
-    // In total mode, rows are flat (no grouping). Click first row.
+    // 總倉模式沒有分組，直接點第一列
     await home.clickResultRow(0);
 
-    // 列展開動畫實作為「永久 render + max-height transition」，
-    // 所以 'text=各期需求' 在 50 個 row 各有一份（hidden）。
-    // 用 .row-detail-open 限定到「展開的那一列」（只有點開的有此 class）。
+    // 明細只在展開時插入，用 .row-detail-open 限定到展開的那一列
     const detail = home.analysisSection.locator(".row-detail-open").locator("text=各期需求");
     await expect(detail).toBeVisible();
 
@@ -226,14 +224,14 @@ test.describe("Core Workflow — Upload → Configure → Calculate → Results"
     const safetyHeader = home.analysisSection.locator("th").filter({ hasText: "安全庫存" });
     await safetyHeader.click();
 
-    // Should show sort indicator
-    await expect(safetyHeader.locator(".text-accent")).toBeVisible();
+    // 排序中的欄位標題 aria-sort 為 ascending / descending
+    await expect(safetyHeader).toHaveAttribute("aria-sort", /ascending|descending/);
 
     // 需求型態欄應渲染且可排序（demand pattern 功能）
     const patternHeader = home.analysisSection.locator("th").filter({ hasText: "需求型態" });
     await expect(patternHeader).toBeVisible();
     await patternHeader.click();
-    await expect(patternHeader.locator(".text-accent")).toBeVisible();
+    await expect(patternHeader).toHaveAttribute("aria-sort", /ascending|descending/);
 
     // 回應 codex bot：split 分組模式下排序需真的重排列順序（不只指示器箭頭）。
     // 用安全庫存（數值欄）切 asc/desc，第一列內容應改變。

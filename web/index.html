@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="計算安全庫存、再訂購點與最大庫存。" />
+    <title>安全庫存計算系統</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/sections.css" />
+    <link rel="stylesheet" href="css/results.css" />
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header-inner">
+        <div>
+          <h1 class="app-title">安全庫存計算系統</h1>
+          <p class="app-subtitle">上傳銷貨資料、設定參數，計算安全庫存、再訂購點與最大庫存。</p>
+        </div>
+        <nav class="tab-nav" id="tab-nav"></nav>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section id="sources" class="tab-panel" role="tabpanel" aria-labelledby="tab-sources" tabindex="-1"></section>
+      <section
+        id="configuration"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-configuration"
+        tabindex="-1"
+      ></section>
+      <section id="analysis" class="tab-panel" role="tabpanel" aria-labelledby="tab-analysis" tabindex="-1"></section>
+    </main>
+
+    <footer class="app-footer">
+      <p class="faint">安全庫存計算系統</p>
+    </footer>
+
+    <noscript><p class="noscript">此工具需要啟用 JavaScript。</p></noscript>
+  </body>
+</html>

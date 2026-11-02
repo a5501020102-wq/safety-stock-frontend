@@ -65,12 +65,14 @@ jobs:
         env:
           FLASK_ENV: testing
 
-      - name: Build frontend
-        run: npm run build
+      - name: Check web frontend (typecheck + unit tests)
+        run: |
+          npm run web:typecheck
+          npm run web:test
 
       - name: Start frontend
         run: |
-          npm start &
+          npm run web:dev &
           # 輪詢 frontend 最多 30 秒
           for i in {1..30}; do
             if curl -sf http://localhost:3000 > /dev/null; then
@@ -83,8 +85,6 @@ jobs:
               exit 1
             fi
           done
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:5000
 
       - name: Copy test data
         run: |

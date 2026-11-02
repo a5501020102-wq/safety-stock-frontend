@@ -1,0 +1,143 @@
+/* 頁面骨架：頁首、分頁導覽、分頁面板、區段標題。 */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.app-header-inner,
+.app-main,
+.app-footer {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding-inline: var(--space-5);
+}
+
+.app-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  padding-block: var(--space-3);
+}
+
+.app-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.app-subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.tablist {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--duration),
+    color var(--duration);
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+}
+
+.tab-step {
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+}
+
+.tab[aria-selected="true"] .tab-step {
+  color: var(--color-accent);
+}
+
+.app-main {
+  padding-block: var(--space-6) var(--space-7);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.tab-panel-active {
+  display: block;
+  animation: fade-in 240ms ease-out both;
+}
+
+.tab-panel:focus {
+  outline: none;
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.section-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+
+.app-footer {
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+
+.noscript {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .app-header-inner,
+  .app-main,
+  .app-footer {
+    padding-inline: var(--space-4);
+  }
+
+  .app-subtitle {
+    display: none;
+  }
+
+  .tablist {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    justify-content: center;
+  }
+}
